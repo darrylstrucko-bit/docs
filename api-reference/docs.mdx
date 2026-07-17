@@ -1,7 +1,7 @@
 ---
-title: "Docs & Syncs API — DSS Stringers Endpoints"
+title: "Docs & Syncs API — DSS Stringers API Reference Guide"
 sidebarTitle: "Docs & Syncs"
-description: "Retrieve generated documentation pages and inspect sync job history and status for any DSS Stringers project via the Docs API."
+description: "Retrieve generated documentation pages by project or slug, and inspect full sync job history and status for any DSS Stringers project."
 ---
 
 Once DSS Stringers has synced a project, it stores each generated page as structured MDX content that you can read back through the API. Use the Docs endpoints to pull page content into your own systems, compare revisions, or build custom documentation UIs. The Syncs endpoints let you audit the history of every sync job and investigate failures.
@@ -63,7 +63,28 @@ Retrieve all generated documentation pages for a project. Supports [pagination](
   </Expandable>
 </ResponseField>
 
-```json Example Response
+<CodeGroup>
+
+```bash cURL
+curl "https://api.dssstringers.com/v1/docs/proj_abc123?page=1&limit=20" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch(
+  'https://api.dssstringers.com/v1/docs/proj_abc123?page=1&limit=20',
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.DSSS_API_KEY}`,
+    },
+  }
+);
+
+const { data, meta } = await response.json();
+console.log(`Retrieved ${data.length} of ${meta.total} pages`);
+```
+
+```json Response
 {
   "data": [
     {
@@ -88,6 +109,8 @@ Retrieve all generated documentation pages for a project. Supports [pagination](
   }
 }
 ```
+
+</CodeGroup>
 
 ---
 
@@ -115,7 +138,28 @@ Returns a single doc page object with the same fields described above.
 <ResponseField name="content" type="string">Full MDX content string for the page.</ResponseField>
 <ResponseField name="updated_at" type="string">ISO 8601 UTC timestamp of the last regeneration.</ResponseField>
 
-```json Example Response
+<CodeGroup>
+
+```bash cURL
+curl "https://api.dssstringers.com/v1/docs/proj_abc123/getting-started" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch(
+  'https://api.dssstringers.com/v1/docs/proj_abc123/getting-started',
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.DSSS_API_KEY}`,
+    },
+  }
+);
+
+const page = await response.json();
+console.log(page.title, page.slug);
+```
+
+```json Response
 {
   "id": "page_001",
   "title": "Getting Started",
@@ -124,6 +168,8 @@ Returns a single doc page object with the same fields described above.
   "updated_at": "2024-01-15T10:30:00Z"
 }
 ```
+
+</CodeGroup>
 
 ---
 
@@ -170,7 +216,28 @@ List the sync job history for a project, sorted by most recent first.
   </Expandable>
 </ResponseField>
 
-```json Example Response
+<CodeGroup>
+
+```bash cURL
+curl "https://api.dssstringers.com/v1/projects/proj_abc123/syncs?page=1&limit=20" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch(
+  'https://api.dssstringers.com/v1/projects/proj_abc123/syncs?page=1&limit=20',
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.DSSS_API_KEY}`,
+    },
+  }
+);
+
+const { data, meta } = await response.json();
+console.log(`${meta.total} syncs total; most recent status: ${data[0]?.status}`);
+```
+
+```json Response
 {
   "data": [
     {
@@ -195,6 +262,8 @@ List the sync job history for a project, sorted by most recent first.
   }
 }
 ```
+
+</CodeGroup>
 
 ---
 
@@ -225,7 +294,30 @@ Returns a single sync object with an additional `error` field for failed jobs.
   Human-readable error message when `status` is `"failed"`. `null` for all other statuses.
 </ResponseField>
 
-```json Example Response (failed sync)
+<CodeGroup>
+
+```bash cURL
+curl "https://api.dssstringers.com/v1/projects/proj_abc123/syncs/sync_xyz788" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch(
+  'https://api.dssstringers.com/v1/projects/proj_abc123/syncs/sync_xyz788',
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.DSSS_API_KEY}`,
+    },
+  }
+);
+
+const sync = await response.json();
+if (sync.status === 'failed') {
+  console.error('Sync failed:', sync.error);
+}
+```
+
+```json Response
 {
   "id": "sync_xyz788",
   "status": "failed",
@@ -235,3 +327,5 @@ Returns a single sync object with an additional `error` field for failed jobs.
   "error": "Unable to clone repository: authentication failed. Check that your repo URL is correct and the integration has read access."
 }
 ```
+
+</CodeGroup>

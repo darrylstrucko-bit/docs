@@ -1,10 +1,10 @@
 ---
 title: "Manage Documentation for Multiple Node.js Projects"
 sidebarTitle: "Multi-Project"
-description: "Create and organise multiple DSS Stringers projects from one account, including monorepo setups with per-package configuration files."
+description: "Create and organise multiple DSS Stringers projects from one account, with per-project AI backends, monorepo support, and per-package configuration files."
 ---
 
-A single DSS Stringers account can manage documentation for as many Node.js projects as you need — separate repos, packages inside a monorepo, or a mixture of both. Each project is fully independent, with its own AI configuration, doc rules, API key, and webhook endpoint, yet all of them are visible and manageable from one unified dashboard.
+A single DSS Stringers account can manage documentation for as many Node.js projects as you need — separate repos, packages inside a monorepo, or a mixture of both. Each project is fully independent, with its own AI backend choice, doc rules, API key, and webhook endpoint, yet all of them are visible and manageable from one unified dashboard.
 
 ## How projects are isolated
 
@@ -64,6 +64,36 @@ When multiple packages live inside one repository, place a separate `.dssstringe
 </CodeGroup>
 
 With this setup, a single push to `main` triggers generation for every package that has a `.dssstringers.json`, and each writes its output to its own subdirectory inside a shared `docs/` folder.
+
+## Using different AI backends per project
+
+One of the most common multi-project patterns is mixing AI backends — for example, using **Claude Code** for a complex backend service and **OpenAI Codex** for a leaner frontend package. Set the `"ai"` field independently in each `.dssstringers.json`:
+
+<CodeGroup>
+```json packages/api/.dssstringers.json
+{
+  "project": "my-app-api",
+  "ai": "claude",
+  "include": ["src/**"],
+  "output": "../../docs/api"
+}
+```
+
+```json packages/web/.dssstringers.json
+{
+  "project": "my-app-web",
+  "ai": "codex",
+  "include": ["src/**"],
+  "output": "../../docs/web"
+}
+```
+</CodeGroup>
+
+Valid values for `"ai"` are `"claude"` (Claude Code) and `"codex"` (OpenAI Codex). You can also override the backend at any time from **Project Settings → AI Model** in the dashboard without touching the config file.
+
+<Note>
+  Your AI backend choice does not affect billing tier — both Claude Code and Codex are available on all plans. Choose based on the output style that best fits each project's audience.
+</Note>
 
 ## Organising projects with tags
 

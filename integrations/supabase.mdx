@@ -72,16 +72,16 @@ application. Each row corresponds to one authenticated user.
 ## Important limitations
 
 <CardGroup cols={2}>
-  <Card title="Read-only introspection" icon="eye">
+  <Card title="Read-only introspection" icon="eye" href="#connect-supabase-to-your-project">
     DSS Stringers only reads schema metadata. It never creates, modifies, or deletes any tables, rows, or database objects.
   </Card>
-  <Card title="Schema changes" icon="arrows-rotate">
+  <Card title="Automatic schema sync" icon="arrows-rotate" href="#connect-supabase-to-your-project">
     Schema reference pages are regenerated on every documentation run. Drop a column and the next run removes it from the docs automatically.
   </Card>
-  <Card title="No query execution" icon="ban">
-    DSS Stringers does not execute queries against your data. Only `information_schema` and `pg_catalog` metadata is accessed.
+  <Card title="No query execution" icon="ban" href="#connect-supabase-to-your-project">
+    DSS Stringers does not execute queries against your live data. Only schema and relationship metadata is accessed during introspection.
   </Card>
-  <Card title="RLS policies" icon="lock">
+  <Card title="RLS policies" icon="lock" href="#connect-supabase-to-your-project">
     Row Level Security policy definitions are documented as metadata but are never evaluated or bypassed during introspection.
   </Card>
 </CardGroup>

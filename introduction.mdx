@@ -1,7 +1,7 @@
 ---
 title: "DSS Stringers: Automated Docs for Node.js Projects"
 sidebarTitle: "Introduction"
-description: "DSS Stringers connects to your GitHub repos and generates living documentation on every deploy — no manual updates needed."
+description: "DSS Stringers connects your Node.js GitHub repos to an AI-powered doc pipeline that publishes to Mintlify on every deploy — zero manual work."
 ---
 
 DSS Stringers is an automated documentation platform built for Node.js teams. Connect your GitHub repository once, and DSS Stringers takes care of the rest — analysing your code on every push, generating accurate and up-to-date documentation with AI, and publishing it to your Mintlify site without any manual intervention. Whether you deploy through Vercel or push directly to GitHub, your docs stay in sync with your code.
@@ -33,7 +33,7 @@ Follow these four steps to go from zero to living documentation for your project
     Install the DSS Stringers GitHub App on the repo you want to document. This grants DSS Stringers the read access it needs to analyse your code on every push.
   </Step>
   <Step title="Configure and push">
-    Add your API key as a repository secret, drop an optional `.dssstringers.json` config file into your project root, and push a commit to trigger your first doc generation run.
+    Add your API key as a repository secret named `DSSS_API_KEY`, drop an optional `.dssstringers.json` config file into your project root, and push a commit to trigger your first doc generation run.
   </Step>
   <Step title="View your published docs">
     Open your Mintlify site — your documentation is live and will update automatically on every subsequent deploy. No manual editing required.
@@ -43,3 +43,11 @@ Follow these four steps to go from zero to living documentation for your project
 <Tip>
   If you are already using Vercel for deployments, DSS Stringers can hook directly into your Vercel pipeline so doc generation fires on every successful production deploy — no extra CI configuration needed. See the [How It Works](/how-it-works) page for details.
 </Tip>
+
+## Works with your existing stack
+
+DSS Stringers is designed for the tools Node.js teams already rely on. Here is how it fits into three common setups:
+
+- **Claude Code or OpenAI Codex** — choose your preferred AI model as the documentation backend in **Project Settings → AI Backend**. Both produce accurate, readable Markdown from your source files.
+- **Vercel deployments** — connect your Vercel project alongside your GitHub repo so doc generation triggers on successful production deploys, ensuring your docs always reflect shipped code.
+- **Supabase** — if your Node.js app uses Supabase for its database, DSS Stringers analyses your Supabase client calls, schema helpers, and Edge Function files just like any other source file, so your data-layer code is documented automatically alongside the rest of your project.

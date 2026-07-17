@@ -1,5 +1,5 @@
 ---
-title: "Shape and Customise Your Generated Documentation"
+title: "Shape and Customise Your DSS Stringers Docs Output"
 sidebarTitle: "Customising Output"
 description: "Control tone, structure, and content of DSS Stringers output using Doc Rules, JSDoc annotations, README context files, and MDX overrides."
 ---
@@ -8,7 +8,7 @@ DSS Stringers gives you several layers of control over how generated docs look a
 
 ## Set tone with Doc Rules
 
-The **Doc Rules** system prompt is the highest-level customisation available. It tells the AI how to write — the vocabulary, formality, and level of detail to use across your entire project.
+The **Doc Rules** system prompt is the highest-level customisation available. It tells the AI how to write — the vocabulary, formality, and level of detail to use across your entire project. Doc Rules work with both supported AI backends: **Claude Code** and **OpenAI Codex**. You can switch your backend at any time in **Project Settings → AI Model** without losing your Doc Rules.
 
 Open **Project Settings → Doc Rules** and edit the system prompt directly. Some examples:
 
@@ -128,16 +128,16 @@ src/
 ## Customisation layers at a glance
 
 <CardGroup cols={2}>
-  <Card title="Doc Rules" icon="sliders">
+  <Card title="Doc Rules" icon="sliders" href="https://app.dssstringers.com/settings/doc-rules">
     Account- or project-wide tone and style instructions applied to every generated page.
   </Card>
-  <Card title="JSDoc annotations" icon="code">
+  <Card title="JSDoc annotations" icon="code" href="/guides/customizing-output#enrich-source-material-with-jsdoc">
     Per-function metadata that gives the AI precise, structured source material to work from.
   </Card>
-  <Card title="README context files" icon="book-open">
+  <Card title="README context files" icon="book-open" href="/guides/customizing-output#use-readme-files-for-module-level-context">
     Module-level narrative that anchors generated docs in real architecture and intent.
   </Card>
-  <Card title=".override.mdx files" icon="pen-to-square">
+  <Card title=".override.mdx files" icon="pen-to-square" href="/guides/customizing-output#override-a-page-with-hand-written-content">
     Full page replacements for content that must be hand-crafted and never auto-generated.
   </Card>
 </CardGroup>

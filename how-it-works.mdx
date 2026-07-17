@@ -31,10 +31,10 @@ DSS Stringers turns your Git history into a continuous documentation pipeline. E
     You can choose your preferred AI backend in **Project Settings → AI Backend**. Both models are supported; you can switch at any time without losing previously generated docs.
 
     <CardGroup cols={2}>
-      <Card title="Claude Code" icon="robot">
+      <Card title="Claude Code" icon="robot" href="/integrations/claude-code">
         Anthropic's model excels at nuanced prose, explaining complex logic in plain language, and maintaining a consistent documentation style across large codebases.
       </Card>
-      <Card title="OpenAI Codex" icon="microchip">
+      <Card title="OpenAI Codex" icon="microchip" href="/integrations/openai-codex">
         Codex is optimised for code-first analysis — ideal for projects with dense logic, tightly coupled modules, or heavily typed TypeScript codebases.
       </Card>
     </CardGroup>
@@ -63,7 +63,7 @@ DSS Stringers is designed to fit into the tools you already use. The table below
 | **Vercel** | Optional deploy-event trigger; ensures docs reflect production-ready code |
 | **Claude Code** | AI backend option for documentation generation |
 | **OpenAI Codex** | AI backend option for documentation generation |
-| **Supabase** | Stores project metadata, run history, and generated doc content for your dashboard |
+| **Supabase** | Supported database in your Node.js stack; Supabase client code and Edge Functions are analysed and documented the same as any other source file |
 | **Mintlify** | Publishes and serves the final documentation site |
 
 For setup instructions for each integration, visit the [Integrations](/integrations/github) section.
@@ -96,6 +96,39 @@ Open **Project Settings → AI Backend** in the dashboard and select either **Cl
 
 <Tip>
   Not sure which model to choose? Start with **Claude Code** for most projects — it produces readable prose that works well for public-facing documentation. Switch to **Codex** if your project has heavily algorithmic code where technical precision matters more than narrative style.
+</Tip>
+
+## Triggering the pipeline via the API
+
+In addition to automatic webhook triggers, you can drive every stage of the pipeline programmatically using the DSS Stringers REST API (base URL: `https://api.dssstringers.com/v1`). Authenticate every request by setting your `DSSS_API_KEY` in the `Authorization` header.
+
+| Endpoint | What it does |
+|---|---|
+| `POST /projects` | Create a new project and receive its ID and API key |
+| `GET /projects/:id` | Fetch the current configuration and status of a project |
+| `POST /projects/:id/sync` | Manually trigger a full documentation generation run |
+| `GET /docs/:projectId` | Retrieve the latest generated doc content for a project |
+| `POST /webhooks` | Register an additional webhook endpoint to receive run-completion events |
+| `DELETE /webhooks/:id` | Remove a registered webhook |
+
+<CodeGroup>
+```bash Trigger a sync
+curl -X POST https://api.dssstringers.com/v1/projects/proj_abc123/sync \
+  -H "Authorization: Bearer $DSSS_API_KEY"
+```
+
+```json Response
+{
+  "runId": "run_xyz789",
+  "status": "queued",
+  "projectId": "proj_abc123",
+  "createdAt": "2024-05-01T12:00:00Z"
+}
+```
+</CodeGroup>
+
+<Tip>
+  Use `POST /projects/:id/sync` in your own CI scripts or Supabase Edge Functions to trigger documentation runs on a schedule or in response to application events — for example, after a database migration completes.
 </Tip>
 
 ## Next steps

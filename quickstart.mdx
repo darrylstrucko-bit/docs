@@ -1,7 +1,7 @@
 ---
-title: "Quickstart: Connect Your First Node.js Project"
+title: "Quickstart: Publish Docs for Your First Node.js Project"
 sidebarTitle: "Quickstart"
-description: "Go from sign-up to auto-generated, published documentation for your Node.js project in under five minutes with DSS Stringers."
+description: "Connect your Node.js GitHub repo to DSS Stringers and publish auto-generated, AI-powered documentation to Mintlify in under five minutes."
 ---
 
 This guide walks you through connecting your first Node.js project to DSS Stringers. By the end you will have a working pipeline that automatically generates and publishes documentation every time you push to GitHub. The whole process takes about five minutes.
@@ -64,6 +64,7 @@ By default DSS Stringers documents all JavaScript and TypeScript source files it
 | Field | Type | Description |
 |---|---|---|
 | `project` | `string` | The project name shown in your DSS Stringers dashboard. |
+| `ai` | `"claude"` \| `"codex"` | AI backend to use for this project. Defaults to `"claude"`. |
 | `include` | `string[]` | Glob patterns for files to analyse. Defaults to all `.js` and `.ts` files. |
 | `exclude` | `string[]` | Glob patterns for files to skip. Test files and `node_modules` are excluded by default. |
 | `output` | `string` | The directory where generated doc source files are written before publishing. |
@@ -71,6 +72,10 @@ By default DSS Stringers documents all JavaScript and TypeScript source files it
 <Tip>
   Commit your `.dssstringers.json` to version control so every team member and every CI run uses the same documentation configuration.
 </Tip>
+
+<Note>
+  **Using Supabase?** DSS Stringers treats your Supabase client code, database helpers, and Edge Function files as regular source files — no special configuration required. If you want to focus analysis on your data layer, add the relevant paths to your `include` patterns, for example `"src/lib/supabase/**/*.ts"`.
+</Note>
 
 ## Next steps
 

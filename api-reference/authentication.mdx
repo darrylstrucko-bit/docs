@@ -1,10 +1,10 @@
 ---
-title: "Authenticating with the DSS Stringers API"
+title: "API Key Authentication — DSS Stringers API Reference"
 sidebarTitle: "Authentication"
-description: "Learn how to locate, use, and rotate your DSS Stringers API key to authenticate every request you make to the API."
+description: "Learn how to locate, use, and rotate your DSS Stringers API key to securely authenticate every HTTP request you make to the REST API."
 ---
 
-DSS Stringers uses API key authentication. Every project gets its own unique key, so access is scoped to a single project by default. You pass the key as a Bearer token in the `Authorization` header of every HTTP request — there are no cookies, sessions, or OAuth flows to manage.
+DSS Stringers uses API key authentication. You pass your API key as a Bearer token in the `Authorization` header of every HTTP request — there are no cookies, sessions, or OAuth flows to manage. Your account-level key grants access to all resources (projects, docs, syncs, and webhooks) owned by your account. A separate project-scoped key is also returned when you create a project via [POST /projects](/api-reference/projects#post-projects), and it can be used to restrict access to that single project.
 
 ## Finding Your API Key
 

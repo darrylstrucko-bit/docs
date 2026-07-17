@@ -1,7 +1,7 @@
 ---
-title: "Common Issues & Troubleshooting Guide"
+title: "DSS Stringers Common Issues & Troubleshooting Guide"
 sidebarTitle: "Common Issues"
-description: "Diagnose and resolve the most frequent problems encountered with DSS Stringers, from missing doc generation to AI quota errors."
+description: "Diagnose and fix common DSS Stringers problems: missing doc generation, invalid API keys, AI quota errors, Vercel hook failures, and Supabase issues."
 ---
 
 When something goes wrong with your DSS Stringers pipeline, the root cause usually falls into one of a handful of categories: a misconfigured secret, a mismatch between your config file and your repo, or a hiccup with an upstream integration. Work through the relevant accordion below to get back on track quickly.
@@ -44,6 +44,28 @@ When something goes wrong with your DSS Stringers pipeline, the root cause usual
 
     <Warning>
       Do not raise the chunk size threshold as a workaround — oversized prompts increase latency significantly and may exceed your AI provider's context window, causing generation to fail entirely.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Wrong AI backend or backend not responding">
+    DSS Stringers supports two AI generation backends: **Anthropic Claude** and **OpenAI Codex**. Misconfiguring the backend, or supplying the wrong API key for the selected backend, is a common source of silent generation failures.
+
+    - **Check your configured backend.** Open `.dssstringers.json` at the root of your repository and look for the `"aiBackend"` field. Valid values are `"claude"` and `"codex"`. If the field is absent, DSS Stringers defaults to `"claude"`.
+
+    ```json
+    {
+      "aiBackend": "claude",
+      "include": ["src/**/*.ts"],
+      "branch": "main"
+    }
+    ```
+
+    - **Make sure your API key matches the selected backend.** If `aiBackend` is `"claude"`, the `DSSS_API_KEY` secret must be an Anthropic API key (begins with `sk-ant-`). If `aiBackend` is `"codex"`, it must be an OpenAI API key (begins with `sk-`). Supplying an Anthropic key when Codex is selected — or vice versa — produces an authentication error that can look identical to a missing-key error.
+    - **Switching backends mid-project is safe.** Update `"aiBackend"` in `.dssstringers.json`, replace the `DSSS_API_KEY` secret with a key for the new provider, and push. DSS Stringers regenerates only the files that have changed since the last successful sync, so you will not pay to regenerate your entire project from scratch.
+    - **Claude Code vs standard Claude models.** If you are using Claude Code (claude-code-* model variants) as opposed to a standard Claude model, ensure your Anthropic account has access to Claude Code. Check your model tier under **Project Settings > AI Backend** in the DSS Stringers dashboard. Accounts without Claude Code access receive a `model_not_found` error in the Sync Log.
+
+    <Warning>
+      Never commit your AI provider API key directly to `.dssstringers.json`. Always store it as the `DSSS_API_KEY` secret in your repository's **Settings > Secrets and variables > Actions**.
     </Warning>
   </Accordion>
 

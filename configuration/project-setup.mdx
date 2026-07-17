@@ -1,7 +1,7 @@
 ---
-title: "Project Setup: .dssstringers.json Config File"
+title: "Project Setup: Configuring the .dssstringers.json File"
 sidebarTitle: "Project Setup"
-description: "Configure DSS Stringers for your repo using the .dssstringers.json file. Control which files are analysed, which AI backend runs, and where docs are written."
+description: "Configure DSS Stringers for your repo using .dssstringers.json. Control which files are analysed, which AI backend runs, and where docs are written."
 ---
 
 Every DSS Stringers project is driven by a single configuration file — `.dssstringers.json` — that lives at the root of your repository. When DSS Stringers detects a new commit or a Vercel deploy event, it reads this file first to understand the shape of your project before it analyses a single line of code. Place the file at the repo root and commit it alongside your source so every branch stays in sync with its own documentation settings.
@@ -35,7 +35,7 @@ Start with the full example below, then customise each field to match your proje
   The project slug from your DSS Stringers dashboard. You can find this under
   **Dashboard → Projects → \[your project\] → Settings → General**. The slug
   must match exactly — it is used to route generated docs to the correct
-  Mintlify site and Supabase project record.
+  Mintlify site for your project.
 
   ```json
   { "project": "my-node-app" }
@@ -92,7 +92,7 @@ Start with the full example below, then customise each field to match your proje
 
 <ParamField path="ai" type='"claude" | "openai"'>
   Selects the AI backend used for documentation generation. Set to `"claude"`
-  to use Anthropic Claude Code or `"openai"` to use OpenAI Codex.
+  to use Anthropic Claude or `"openai"` to use OpenAI Codex.
 
   **Default:** inherits whichever backend is configured in your DSS Stringers
   dashboard under **Project Settings → AI → Default backend**.

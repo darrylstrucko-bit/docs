@@ -1,7 +1,7 @@
 ---
-title: "Projects API — DSS Stringers Endpoints"
+title: "Projects API — Create and Manage DSS Stringers Projects"
 sidebarTitle: "Projects"
-description: "Create, list, update, and delete DSS Stringers projects, and trigger manual documentation syncs via the Projects REST API."
+description: "Create, list, retrieve, update, and delete DSS Stringers projects, and trigger on-demand documentation syncs via the Projects REST API."
 ---
 
 Projects are the top-level resource in DSS Stringers. Each project maps to a single Git repository and controls which AI model generates your docs, which files are included or excluded, and which branch is tracked. The endpoints below let you manage the full project lifecycle and kick off on-demand sync jobs without visiting the Dashboard.
@@ -66,6 +66,26 @@ curl -X POST https://api.dssstringers.com/v1/projects \
   }'
 ```
 
+```javascript Node.js
+const response = await fetch('https://api.dssstringers.com/v1/projects', {
+  method: 'POST',
+  headers: {
+    Authorization: `Bearer ${process.env.DSSS_API_KEY}`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    name: 'My API Docs',
+    slug: 'my-api-docs',
+    repo_url: 'https://github.com/acme/api',
+    ai: 'claude',
+  }),
+});
+
+const project = await response.json();
+// Store project.api_key securely — it is only returned once
+console.log(project.id, project.api_key);
+```
+
 ```json Response
 {
   "id": "proj_abc123",
@@ -116,6 +136,47 @@ Returns an array of project objects under a `data` key, plus a `meta` pagination
   </Expandable>
 </ResponseField>
 
+<CodeGroup>
+
+```bash cURL
+curl https://api.dssstringers.com/v1/projects?page=1&limit=20 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch(
+  'https://api.dssstringers.com/v1/projects?page=1&limit=20',
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.DSSS_API_KEY}`,
+    },
+  }
+);
+
+const { data, meta } = await response.json();
+console.log(`Fetched ${data.length} of ${meta.total} projects`);
+```
+
+```json Response
+{
+  "data": [
+    {
+      "id": "proj_abc123",
+      "name": "My API Docs",
+      "slug": "my-api-docs",
+      "created_at": "2024-01-15T10:30:00Z"
+    }
+  ],
+  "meta": {
+    "total": 1,
+    "page": 1,
+    "limit": 20
+  }
+}
+```
+
+</CodeGroup>
+
 ---
 
 ## GET /projects/:id
@@ -141,6 +202,43 @@ Returns the full project object.
 <ResponseField name="include" type="array">List of glob patterns for files to include.</ResponseField>
 <ResponseField name="exclude" type="array">List of glob patterns for files to exclude.</ResponseField>
 <ResponseField name="created_at" type="string">ISO 8601 UTC creation timestamp.</ResponseField>
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.dssstringers.com/v1/projects/proj_abc123 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch(
+  'https://api.dssstringers.com/v1/projects/proj_abc123',
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.DSSS_API_KEY}`,
+    },
+  }
+);
+
+const project = await response.json();
+console.log(project.name, project.branch);
+```
+
+```json Response
+{
+  "id": "proj_abc123",
+  "name": "My API Docs",
+  "slug": "my-api-docs",
+  "repo_url": "https://github.com/acme/api",
+  "ai": "claude",
+  "branch": "main",
+  "include": [],
+  "exclude": [],
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+</CodeGroup>
 
 ---
 
@@ -193,6 +291,27 @@ curl -X PATCH https://api.dssstringers.com/v1/projects/proj_abc123 \
   }'
 ```
 
+```javascript Node.js
+const response = await fetch(
+  'https://api.dssstringers.com/v1/projects/proj_abc123',
+  {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${process.env.DSSS_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      branch: 'docs',
+      ai: 'openai',
+      exclude: ['**/*.test.ts', 'dist/**'],
+    }),
+  }
+);
+
+const project = await response.json();
+console.log(project.branch, project.ai);
+```
+
 ```json Response
 {
   "id": "proj_abc123",
@@ -225,10 +344,35 @@ Permanently delete a project and **all** of its generated documentation. This ac
 
 An empty body is returned on success.
 
+<Warning>
+  Deleting a project permanently removes all of its generated documentation and sync history. This action cannot be undone.
+</Warning>
+
+<CodeGroup>
+
 ```bash cURL
 curl -X DELETE https://api.dssstringers.com/v1/projects/proj_abc123 \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
+
+```javascript Node.js
+const response = await fetch(
+  'https://api.dssstringers.com/v1/projects/proj_abc123',
+  {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${process.env.DSSS_API_KEY}`,
+    },
+  }
+);
+
+// 204 No Content — response body is empty
+if (response.status === 204) {
+  console.log('Project deleted successfully');
+}
+```
+
+</CodeGroup>
 
 ---
 
@@ -269,6 +413,24 @@ curl -X POST https://api.dssstringers.com/v1/projects/proj_abc123/sync \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{ "force": true }'
+```
+
+```javascript Node.js
+const response = await fetch(
+  'https://api.dssstringers.com/v1/projects/proj_abc123/sync',
+  {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.DSSS_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ force: true }),
+  }
+);
+
+const sync = await response.json();
+// Poll GET /projects/:id/syncs/:syncId to track progress
+console.log(sync.id, sync.status);
 ```
 
 ```json Response

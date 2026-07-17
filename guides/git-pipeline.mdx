@@ -1,7 +1,7 @@
 ---
-title: "Set Up a Git-to-Docs Pipeline with Vercel"
+title: "Automate Docs with a GitHub and Vercel Deploy Pipeline"
 sidebarTitle: "Git Pipeline"
-description: "Chain GitHub pushes, Vercel deploys, and DSS Stringers doc generation into a single automated pipeline so docs stay in sync with production."
+description: "Chain GitHub pushes, Vercel production deploys, and DSS Stringers doc generation into a single automated pipeline so docs stay in sync with production."
 ---
 
 DSS Stringers fits naturally into a Vercel-based deployment workflow. You can trigger doc generation in parallel with your Vercel deploy, or — for tighter consistency — wait until Vercel confirms a successful production deploy before regenerating docs. This guide covers both approaches and explains how to combine them safely.
@@ -37,10 +37,10 @@ If you want docs to reflect only what is actually live in production — not eve
 In the DSS Stringers dashboard, go to **Project Settings → Triggers** and copy the **Inbound Webhook URL**. It follows this pattern:
 
 ```
-https://hooks.dssstringers.com/v1/trigger/<project-slug>?token=<webhook-token>
+https://hooks.dssstringers.com/vercel/{project-id}?token={hook-token}
 ```
 
-Keep this URL secret — anyone with it can trigger a doc generation run.
+Replace `{project-id}` with your project's ID (visible in **Project Settings → General**) and `{hook-token}` with the token shown on the Triggers page. Keep this URL secret — anyone with it can trigger a doc generation run.
 
 ### Step 2: Add the webhook as a Vercel Deploy Hook
 
@@ -67,6 +67,14 @@ You may want the speed of the parallel GitHub trigger during development, but al
   The GitHub integration and the Vercel Deploy Hook can both be active at the same time. If a single push causes both triggers to fire within a short window, DSS Stringers deduplicates them and runs only one generation job — you will never be billed or rate-limited for duplicate triggers.
 </Note>
 
+## Supabase users: connect your database context
+
+If your Node.js project uses Supabase as its database, DSS Stringers can incorporate your table and function descriptions into the generated docs. In **Project Settings → Integrations → Supabase**, paste your Supabase project URL and a read-only service key. DSS Stringers will pull column comments and RPC descriptions at generation time and include them alongside your application-layer code documentation.
+
+<Tip>
+  You do not need to expose any write credentials. A read-only Supabase service key is sufficient for DSS Stringers to query table and function metadata.
+</Tip>
+
 ## Verifying the pipeline
 
 After completing setup, push a small change to `main` and watch the following sequence in your dashboards:
@@ -75,8 +83,8 @@ After completing setup, push a small change to `main` and watch the following se
 |------|-------|
 | 0 s  | GitHub push detected |
 | ~5 s | DSS Stringers job queued |
-| ~30–90 s | Docs generated |
+| ~30–90 s | Docs generated and Vercel build running in parallel |
 | ~60–120 s | Mintlify site updated |
-| ~60–180 s | Vercel deploy hook fires (if using hook method) |
+| ~60–180 s | Vercel deploy hook fires (if using hook method), confirming production is live |
 
 You can inspect every trigger and its outcome in **Project Settings → Trigger History**.

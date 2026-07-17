@@ -1,10 +1,10 @@
 ---
 title: "Connect Your First Node.js Project to DSS Stringers"
 sidebarTitle: "First Project"
-description: "A complete end-to-end walkthrough for connecting a Node.js repo to DSS Stringers and publishing your first set of generated docs."
+description: "Step-by-step walkthrough for connecting a Node.js GitHub repo to DSS Stringers, choosing your AI backend, and publishing your first auto-generated docs."
 ---
 
-Getting your first project up and running with DSS Stringers takes less than ten minutes. By the end of this guide you will have a live documentation site that regenerates automatically every time you push to `main`.
+Getting your first project up and running with DSS Stringers takes less than ten minutes. By the end of this guide you will have a live documentation site — powered by either **Claude Code** or **OpenAI Codex** — that regenerates automatically every time you push to `main`.
 
 <Steps>
   <Step title="Sign up">
@@ -13,6 +13,21 @@ Getting your first project up and running with DSS Stringers takes less than ten
 
   <Step title="Create a new project">
     From the dashboard, click **New Project**. Enter a human-readable **name** (e.g. `My First App`) and a URL-safe **slug** (e.g. `my-first-app`). The slug becomes part of your docs URL, so choose something short and descriptive.
+  </Step>
+
+  <Step title="Choose your AI backend">
+    Select the AI model that will generate your documentation. DSS Stringers supports two backends:
+
+    <CardGroup cols={2}>
+      <Card title="Claude Code" icon="robot" href="https://app.dssstringers.com/settings/ai">
+        Anthropic's Claude model. Produces rich narrative explanations and handles large, complex codebases well.
+      </Card>
+      <Card title="OpenAI Codex" icon="microchip" href="https://app.dssstringers.com/settings/ai">
+        OpenAI's Codex model. Strong at terse, precise reference-style output and inline code examples.
+      </Card>
+    </CardGroup>
+
+    You can switch backends at any time from **Project Settings → AI Model** without losing your Doc Rules or other configuration.
   </Step>
 
   <Step title="Install the GitHub App">
@@ -24,16 +39,17 @@ Getting your first project up and running with DSS Stringers takes less than ten
   </Step>
 
   <Step title="Create .dssstringers.json">
-    Add a configuration file at the root of your repository. This file tells DSS Stringers which files to include and how to identify the project.
+    Add a configuration file at the root of your repository. This file tells DSS Stringers which files to include, how to identify the project, and which AI backend to use.
 
     ```json .dssstringers.json
     {
       "project": "my-first-app",
+      "ai": "claude",
       "include": ["src/**"]
     }
     ```
 
-    The `include` array accepts standard glob patterns. Start with `src/**` and refine later once you have seen your first output.
+    Set `"ai"` to `"claude"` for Claude Code or `"codex"` for OpenAI Codex. The `include` array accepts standard glob patterns — start with `src/**` and refine later once you have seen your first output.
   </Step>
 
   <Step title="Push a commit to main">
