@@ -1,0 +1,152 @@
+---
+title: "Doc Rules: Customise What DSS Stringers Documents"
+sidebarTitle: "Doc Rules"
+description: "Control the tone, structure, and scope of your generated docs using Doc Rules — custom prompts, required sections, and JSDoc exclusion tags."
+---
+
+Doc Rules give you fine-grained control over what DSS Stringers documents and how it writes. You can define a custom system prompt that shapes the AI's tone and formatting style, specify sections that must appear on every page, and mark individual functions or classes as off-limits using standard JSDoc tags — all without touching your `.dssstringers.json` file. Doc Rules are configured per-project in the dashboard and apply to every sync until you change them.
+
+## Opening Doc Rules in the dashboard
+
+Navigate to **Dashboard → Projects → \[your project\] → Settings → Doc Rules**. The panel is divided into three tabs: **Prompt**, **Sections**, and **Exclusions**. Changes take effect on the next sync; you do not need to push a new commit to apply them.
+
+## Custom system prompt
+
+The **Prompt** tab lets you write a free-text instruction that is prepended to every AI generation request. Use it to enforce house style, set a target reading level, or ask for a specific markdown structure.
+
+Below is an example of a system prompt you might enter in the dashboard text area:
+
+```text Custom system prompt
+You are a technical writer producing API reference documentation for a
+Node.js SDK used by professional backend engineers. Write in second
+person, active voice, and imperative mood. Keep sentences under 25 words.
+Always lead with a one-sentence summary of what the function does before
+listing parameters. Use British English spelling. Never use the word
+"simply" or "just".
+```
+
+<Tip>
+  The more specific your system prompt, the more consistent your docs will be
+  across syncs. Describe the audience, the desired reading level, and any
+  formatting conventions your team uses (e.g., always show a usage example,
+  always list error codes).
+</Tip>
+
+## Required sections
+
+Under the **Sections** tab, define a list of sections that must appear on every generated doc page. DSS Stringers will instruct the AI to include each section even when source-code context is sparse.
+
+Common sections to enforce:
+
+<CardGroup cols={2}>
+  <Card title="Parameters" icon="list">
+    A table or list describing every argument — name, type, whether it is
+    required, and a short description.
+  </Card>
+  <Card title="Returns" icon="arrow-turn-down-right">
+    The return type and a description of the value, including edge cases such
+    as `null` or `undefined`.
+  </Card>
+  <Card title="Example" icon="code">
+    A runnable code snippet demonstrating the most common use case.
+  </Card>
+  <Card title="Throws" icon="triangle-exclamation">
+    Any errors or exceptions the function may raise, and under what conditions.
+  </Card>
+</CardGroup>
+
+## Excluding functions and classes with JSDoc tags
+
+Sometimes a function is an implementation detail that has no place in public documentation. Rather than fighting with glob patterns in `.dssstringers.json`, mark individual exports directly in your source code using standard JSDoc tags. DSS Stringers reads these tags during analysis and skips the marked item entirely.
+
+### `@nodoc`
+
+Add `@nodoc` to any JSDoc comment to prevent that function, class, or method from appearing in generated docs.
+
+```javascript
+/**
+ * @nodoc
+ * This function won't appear in generated docs.
+ */
+function internalHelper() { ... }
+```
+
+### `@internal`
+
+Add `@internal` to signal that an export is part of the package's private API surface. DSS Stringers treats `@internal` the same as `@nodoc` — the item is skipped during generation.
+
+```javascript
+/**
+ * @internal
+ * Also excluded from public documentation.
+ */
+export function privateSetup() { ... }
+```
+
+### TypeScript example
+
+Both tags work identically in TypeScript files and can be applied to classes, interfaces, methods, and standalone functions.
+
+```typescript
+/**
+ * @internal
+ * Bootstraps the internal event bus. Not part of the public API.
+ */
+export class EventBusBootstrapper {
+  /**
+   * @nodoc
+   */
+  init(): void { ... }
+}
+```
+
+<Warning>
+  `@nodoc` and `@internal` only suppress generation of documentation pages.
+  They do not affect your compiled output or runtime behaviour. If you need to
+  prevent a symbol from being exported in your npm package, use TypeScript's
+  `private` keyword or a barrel file instead.
+</Warning>
+
+## Getting better code examples with `@example`
+
+DSS Stringers uses any `@example` blocks already present in your JSDoc comments as seed material when generating usage examples. If you provide a concrete `@example`, the AI will model its generated example on yours — resulting in more accurate, project-specific snippets.
+
+<Tip>
+  Add `@example` tags to your most important public functions. Even a minimal
+  two-line example dramatically improves the quality and relevance of the code
+  samples DSS Stringers generates for that function.
+</Tip>
+
+```javascript
+/**
+ * Sends a welcome email to a new user.
+ *
+ * @param {string} email - The recipient's email address.
+ * @param {string} name  - The recipient's display name.
+ * @returns {Promise<void>}
+ *
+ * @example
+ * await sendWelcomeEmail("ada@example.com", "Ada");
+ */
+export async function sendWelcomeEmail(email, name) { ... }
+```
+
+## Applying changes
+
+<Steps>
+  <Step title="Open Doc Rules">
+    Go to **Dashboard → Projects → \[your project\] → Settings → Doc Rules**.
+  </Step>
+  <Step title="Edit your settings">
+    Update the system prompt, adjust required sections, or save your changes to
+    the Exclusions list.
+  </Step>
+  <Step title="Trigger a sync">
+    Click **Sync now** in the dashboard, or push a commit to the watched branch.
+    The new rules apply immediately to the next generation run.
+  </Step>
+  <Step title="Review the output">
+    Check the generated pages in the DSS Stringers preview panel before
+    publishing to confirm the tone and structure match your expectations.
+  </Step>
+</Steps>

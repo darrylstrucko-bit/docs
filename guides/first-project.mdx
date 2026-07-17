@@ -1,0 +1,68 @@
+---
+title: "Connect Your First Node.js Project to DSS Stringers"
+sidebarTitle: "First Project"
+description: "A complete end-to-end walkthrough for connecting a Node.js repo to DSS Stringers and publishing your first set of generated docs."
+---
+
+Getting your first project up and running with DSS Stringers takes less than ten minutes. By the end of this guide you will have a live documentation site that regenerates automatically every time you push to `main`.
+
+<Steps>
+  <Step title="Sign up">
+    Create your account at [app.dssstringers.com](https://app.dssstringers.com). You can sign up with GitHub for a faster setup — this also pre-authorises the GitHub App installation in the next step.
+  </Step>
+
+  <Step title="Create a new project">
+    From the dashboard, click **New Project**. Enter a human-readable **name** (e.g. `My First App`) and a URL-safe **slug** (e.g. `my-first-app`). The slug becomes part of your docs URL, so choose something short and descriptive.
+  </Step>
+
+  <Step title="Install the GitHub App">
+    On the project setup screen, click **Install GitHub App** and grant DSS Stringers access to the repository you want to document. You can scope access to a single repo or all repos in your organisation — a single-repo install is recommended to start.
+  </Step>
+
+  <Step title="Add your API key to repo secrets">
+    Copy the `DSSS_API_KEY` value from **Project Settings → API Keys**. In your GitHub repository, go to **Settings → Secrets and variables → Actions** and add a new secret named exactly `DSSS_API_KEY`. DSS Stringers reads this secret during every doc generation run.
+  </Step>
+
+  <Step title="Create .dssstringers.json">
+    Add a configuration file at the root of your repository. This file tells DSS Stringers which files to include and how to identify the project.
+
+    ```json .dssstringers.json
+    {
+      "project": "my-first-app",
+      "include": ["src/**"]
+    }
+    ```
+
+    The `include` array accepts standard glob patterns. Start with `src/**` and refine later once you have seen your first output.
+  </Step>
+
+  <Step title="Push a commit to main">
+    Commit the new `.dssstringers.json` file and push to your `main` branch. The GitHub App detects the push and queues a doc generation job automatically — no further configuration required.
+
+    ```bash
+    git add .dssstringers.json
+    git commit -m "chore: add DSS Stringers config"
+    git push origin main
+    ```
+  </Step>
+
+  <Step title="Watch docs generate in the dashboard">
+    Navigate back to your project in the DSS Stringers dashboard. You will see a **Generating…** status badge appear within a few seconds of your push. Generation typically completes in **30–90 seconds** depending on the size of your codebase. A live log stream lets you follow the AI's progress in real time.
+  </Step>
+
+  <Step title="View your live docs">
+    Once generation finishes, click **View Docs**. Your documentation is published as a Mintlify site at `https://<slug>.dssstringers.com`. Share the link with your team — it will stay up to date on every subsequent push.
+  </Step>
+</Steps>
+
+<Tip>
+  You don't need to push a commit to regenerate docs. Open your project in the dashboard and click **Regenerate** at any time to trigger a fresh generation run against the latest commit on your default branch.
+</Tip>
+
+## What's next
+
+Now that your first project is live, you can:
+
+- **Customise the output** — set tone, group functions by category, and override individual pages. See [Customising Output](/guides/customizing-output).
+- **Set up a full Git pipeline** — chain GitHub pushes, Vercel deploys, and doc updates. See [Git Pipeline](/guides/git-pipeline).
+- **Manage multiple projects** — document every repo or package from one account. See [Multi-Project Setup](/guides/multi-project).

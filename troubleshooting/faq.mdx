@@ -1,0 +1,77 @@
+---
+title: "Frequently Asked Questions — DSS Stringers"
+sidebarTitle: "FAQ"
+description: "Answers to the most common questions about DSS Stringers, covering compatibility, privacy, rollbacks, and project management."
+---
+
+If you are new to DSS Stringers or evaluating whether it fits your workflow, this page answers the questions that come up most often. Each answer links to deeper documentation where relevant so you can keep moving without losing context.
+
+<AccordionGroup>
+  <Accordion title="Does DSS Stringers work with JavaScript and TypeScript?">
+    Yes — DSS Stringers fully supports both JavaScript and TypeScript projects. When you use TypeScript, DSS Stringers reads your type annotations, interfaces, and generics and folds that information directly into the generated documentation, producing richer and more precise parameter descriptions than would be possible from plain JavaScript alone.
+
+    There is nothing extra to configure. DSS Stringers detects `.ts` and `.tsx` files automatically based on the `include` globs in your `.dssstringers.json` file.
+  </Accordion>
+
+  <Accordion title="Can I use DSS Stringers without Mintlify?">
+    Yes. DSS Stringers writes standard MDX files to whichever output directory you specify in your configuration. You can point that output at any MDX-compatible documentation platform — Next.js, Docusaurus, Nextra, or a custom pipeline.
+
+    That said, the native Mintlify integration gives you the smoothest experience: docs are published live on every deploy with no additional CI steps, and the DSS Stringers dashboard can connect directly to your Mintlify project for one-click previews. If you are not yet using Mintlify, the [Mintlify quickstart](https://mintlify.com/docs/quickstart) takes roughly five minutes.
+  </Accordion>
+
+  <Accordion title="Is my source code sent to third-party AI providers?">
+    Only the specific file excerpts that contain changed or new functions are sent to your chosen AI provider (Anthropic Claude or OpenAI Codex). No full source tree is ever transmitted.
+
+    Importantly, your AI API key communicates directly with the provider from within the DSS Stringers generation pipeline — DSS Stringers does not proxy those requests, log the prompt payloads, or store AI responses on its own servers. The only thing DSS Stringers retains is the final MDX output that becomes your documentation.
+
+    <Note>
+      If your project contains sensitive business logic you prefer not to send externally, use `@nodoc` annotations or `exclude` globs in `.dssstringers.json` to omit those files from generation entirely.
+    </Note>
+  </Accordion>
+
+  <Accordion title="How long does a doc generation take?">
+    For a typical Node.js project, generation completes in **30–90 seconds** from the moment the sync is triggered. Projects with hundreds of files, large dependency graphs, or extensive Supabase schemas may take **2–5 minutes**.
+
+    You do not have to wait blindly. Open your project in the DSS Stringers dashboard and click **Sync Log** to watch each step complete in real time — file scanning, AI generation, MDX writing, and publishing all appear as discrete log lines with timestamps.
+  </Accordion>
+
+  <Accordion title="Can I roll back a doc generation?">
+    Yes. Every successful sync creates a versioned snapshot of the generated documentation before overwriting the previous version. To restore an earlier state:
+
+    1. Open your project in the DSS Stringers dashboard.
+    2. Navigate to **Project > History**.
+    3. Find the snapshot you want to restore and click **Restore** next to it.
+
+    The selected snapshot is immediately re-published as the live version of your docs. The restore action itself appears as a new entry in the Sync Log so you have a complete audit trail.
+  </Accordion>
+
+  <Accordion title="Can I edit generated docs manually?">
+    Yes. Create a file with the same path as the generated MDX file but with an `.override.mdx` extension (for example, `docs/api/get-user.override.mdx`). DSS Stringers treats override files as the authoritative source for that page and skips AI regeneration for it on future syncs.
+
+    Your manual edits in override files are preserved indefinitely across syncs. If you later want DSS Stringers to take over generation for that page again, delete the override file and push a commit to trigger a fresh sync.
+
+    <Tip>
+      Override files are ideal for pages that require hand-crafted examples, conceptual explanations, or prose that goes beyond what can be inferred from source code alone.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="What Node.js versions are supported?">
+    DSS Stringers analyses your project's **static source files** — it does not execute your code or require a running Node.js environment. Because of this, there is no Node.js version dependency on the generation side.
+
+    Projects using **Node.js 16 and above** are well-tested and fully supported. If your project targets an older runtime, DSS Stringers will still parse the source files correctly as long as the JavaScript or TypeScript syntax falls within standard ECMAScript boundaries.
+  </Accordion>
+
+  <Accordion title="How do I remove a project?">
+    To permanently delete a project and all of its generated documentation:
+
+    1. Open the project in your DSS Stringers dashboard.
+    2. Go to **Project Settings > Danger Zone**.
+    3. Click **Delete Project** and confirm the prompt.
+
+    This action is irreversible. All synced docs, version history, integration settings, and API keys associated with the project are permanently removed.
+
+    <Warning>
+      Deleting a project does **not** automatically uninstall the DSS Stringers GitHub App from your repository. After deleting the project, go to **GitHub > Settings > Applications > Installed GitHub Apps** and remove DSS Stringers from the relevant repository manually to prevent orphaned webhooks.
+    </Warning>
+  </Accordion>
+</AccordionGroup>

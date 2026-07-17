@@ -1,0 +1,97 @@
+---
+title: "Connect a GitHub Repository to DSS Stringers"
+sidebarTitle: "GitHub"
+description: "Install the DSS Stringers GitHub App, grant repository access, and configure push-event-driven doc generation in minutes."
+---
+
+Connecting GitHub to DSS Stringers lets the platform listen for every push to your default branch and automatically regenerate your documentation. Once the integration is active, keeping your docs in sync with your codebase requires zero manual effort.
+
+<Note>
+  The DSS Stringers GitHub App requires **read access to code** so it can analyse your source files, and **write access to webhooks** so it can register push-event listeners on your behalf.
+</Note>
+
+## Install the GitHub App
+
+<Steps>
+  <Step title="Open the GitHub Marketplace listing">
+    Navigate to [https://github.com/apps/dss-stringers](https://github.com/apps/dss-stringers) and click **Install**.
+  </Step>
+  <Step title="Choose an account">
+    Select the GitHub organisation or personal account that owns the repositories you want to document.
+  </Step>
+  <Step title="Grant repository access">
+    Choose **All repositories** to cover every current and future repo, or pick **Only select repositories** and tick the specific repos you need.
+
+    <Tip>
+      Start with **Only select repositories** so you can validate the integration on one project before rolling it out more broadly.
+    </Tip>
+  </Step>
+  <Step title="Complete the installation">
+    Click **Install & Authorize**. You will be redirected back to the DSS Stringers dashboard, where the newly linked repositories appear under **Settings → Integrations → GitHub**.
+  </Step>
+</Steps>
+
+## Add your API key as a repository secret
+
+DSS Stringers authenticates incoming documentation requests using your project API key. Store it as a GitHub Actions secret so it is never exposed in plain text.
+
+<Steps>
+  <Step title="Copy your API key">
+    In the DSS Stringers dashboard, go to **Settings → API Keys** and copy your `DSSS_API_KEY`.
+  </Step>
+  <Step title="Open repository secrets">
+    In GitHub, go to your repository → **Settings → Secrets and variables → Actions** and click **New repository secret**.
+  </Step>
+  <Step title="Create the secret">
+    Set the name to `DSSS_API_KEY` and paste your key as the value, then click **Add secret**.
+  </Step>
+</Steps>
+
+## Configure with `.dssstringers.json` (optional)
+
+Place a `.dssstringers.json` file at the root of your repository to customise how DSS Stringers processes that repo. All fields are optional — the file is not required for the integration to work.
+
+```json .dssstringers.json
+{
+  "branch": "main",
+  "outputDir": "docs",
+  "ignore": ["tests/**", "scripts/**"],
+  "ai": "claude"
+}
+```
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `branch` | `string` | Branch to watch. Defaults to your repository's default branch. |
+| `outputDir` | `string` | Directory where generated docs are written. Defaults to `docs`. |
+| `ignore` | `string[]` | Glob patterns for files and folders to exclude from analysis. |
+| `ai` | `string` | AI backend to use (`claude` or `openai`). Inherits project default if omitted. |
+
+## How push events work
+
+Once installed, the GitHub App registers a webhook on each connected repository. When you push to the default branch:
+
+1. GitHub delivers a `push` event payload to DSS Stringers.
+2. DSS Stringers identifies the changed files and passes them to the configured AI backend.
+3. Updated documentation pages are generated and published to your docs site.
+4. A status check appears on the commit in GitHub showing whether doc generation succeeded.
+
+## Trigger a manual sync
+
+If you need to regenerate docs outside of a push event — for example, after changing your doc rules — you can trigger a sync from the dashboard.
+
+<Steps>
+  <Step title="Open your project">
+    In the DSS Stringers dashboard, select the project linked to the repository you want to sync.
+  </Step>
+  <Step title="Navigate to the Sync tab">
+    Go to **Settings → Integrations → GitHub** and locate the repository card.
+  </Step>
+  <Step title="Click Sync Now">
+    Click the **Sync Now** button. DSS Stringers will re-analyse the latest commit on the default branch and republish updated pages.
+  </Step>
+</Steps>
+
+<Tip>
+  Manual syncs count against your monthly generation quota the same way automated push-event syncs do.
+</Tip>

@@ -1,0 +1,75 @@
+---
+title: "Use Claude as the AI Backend for Doc Generation"
+sidebarTitle: "Claude"
+description: "Configure Anthropic's Claude as your DSS Stringers AI backend to generate clear, accurate documentation from complex TypeScript and JavaScript codebases."
+---
+
+DSS Stringers supports multiple AI backends for documentation generation, and Claude from Anthropic is an excellent choice for projects with complex TypeScript or JavaScript code. Claude excels at understanding deeply nested types, generic utilities, and nuanced API designs — then translating them into clear, readable prose that developers actually want to read.
+
+<Note>
+  Your Anthropic API key is stored encrypted at rest and is **never logged** or included in any telemetry. DSS Stringers only uses the key to make generation requests on your behalf.
+</Note>
+
+## Set Claude as your AI backend
+
+<Steps>
+  <Step title="Open AI backend settings">
+    In the DSS Stringers dashboard, select your project and navigate to **Project Settings → AI Backend → Claude**.
+  </Step>
+  <Step title="Enter your Anthropic API key">
+    Paste your Anthropic API key into the **API Key** field. You can create or manage API keys at [console.anthropic.com](https://console.anthropic.com).
+  </Step>
+  <Step title="Save the configuration">
+    Click **Save**. DSS Stringers immediately validates the key by making a lightweight test request to the Anthropic API. A green checkmark confirms the key is valid and active.
+  </Step>
+</Steps>
+
+## Configure via `.dssstringers.json`
+
+You can also declare the AI backend directly in your repository's `.dssstringers.json` file. This is useful if you manage multiple projects and want the configuration tracked in version control.
+
+```json .dssstringers.json
+{
+  "ai": "claude",
+  "model": "claude-3-5-sonnet-20241022"
+}
+```
+
+DSS Stringers uses `claude-3-5-sonnet-20241022` by default. This model balances generation quality with speed and cost — it handles large TypeScript files and intricate API surfaces without sacrificing the clarity of the output.
+
+## Why Claude works well for documentation
+
+<CardGroup cols={2}>
+  <Card title="TypeScript & JavaScript" icon="code">
+    Claude accurately resolves complex generic types, conditional types, and deeply nested interfaces to produce precise parameter descriptions.
+  </Card>
+  <Card title="Clear prose" icon="pen-nib">
+    Claude writes documentation in a natural, developer-friendly voice — no robotic repetition or boilerplate filler.
+  </Card>
+  <Card title="Long context window" icon="text-size">
+    Claude's extended context window lets DSS Stringers pass entire files or modules in a single request, preserving cross-file relationships.
+  </Card>
+  <Card title="Instruction following" icon="list-check">
+    Custom prompt templates and doc rules are followed reliably, so your house style is applied consistently across every generated page.
+  </Card>
+</CardGroup>
+
+## Customise the prompt template
+
+DSS Stringers ships with a default prompt template for Claude, but you can override it to match your team's documentation standards.
+
+<Steps>
+  <Step title="Open Doc Rules">
+    In the dashboard, go to **Configuration → Doc Rules**.
+  </Step>
+  <Step title="Edit the Claude prompt template">
+    Modify the template to add instructions such as preferred tone, terminology glossaries, what to include or omit, or how to structure sections.
+  </Step>
+  <Step title="Save and test">
+    Click **Save**, then trigger a manual sync on a representative file to preview how the new template affects the output before rolling it out to your entire project.
+  </Step>
+</Steps>
+
+<Tip>
+  Prepend a short style guide to the prompt template — for example, "Always use second person. Never use the word 'utilize'. Prefer short sentences." — for a noticeable improvement in output consistency.
+</Tip>

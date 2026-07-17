@@ -1,0 +1,202 @@
+---
+title: "Webhooks API — DSS Stringers Endpoints"
+sidebarTitle: "Webhooks"
+description: "Register webhook endpoints to receive real-time POST notifications when DSS Stringers syncs complete, fail, or publish docs to your live site."
+---
+
+Webhooks let DSS Stringers push events to your infrastructure the moment something happens — no polling required. When a sync finishes, fails, or docs go live, DSS Stringers sends an HTTP POST to your registered URL with a signed JSON payload. You can register as many webhook endpoints as you need and filter each one to receive only the events you care about.
+
+## Webhook Events
+
+| Event | Description |
+|---|---|
+| `sync.completed` | A sync job finished successfully. The payload includes a `pages_updated` count. |
+| `sync.failed` | A sync job failed. The payload includes `error` details. |
+| `docs.published` | Generated docs were deployed and are now live on the published site. |
+
+---
+
+## POST /webhooks
+
+Register a new webhook endpoint.
+
+### Request Body
+
+<ParamField body="url" type="string" required>
+  The HTTPS URL DSS Stringers should send event payloads to (e.g. `"https://myapp.com/webhooks/dsss"`).
+</ParamField>
+
+<ParamField body="events" type="string[]" required>
+  Array of event names this endpoint should receive. Must include at least one event. Valid values: `"sync.completed"`, `"sync.failed"`, `"docs.published"`.
+</ParamField>
+
+<ParamField body="project_id" type="string">
+  Scope this webhook to a specific project by its `id` or `slug`. Omit this field to receive matching events for **all** projects in your account.
+</ParamField>
+
+### Response — 201 Created
+
+<ResponseField name="id" type="string">
+  Unique identifier for the webhook registration (e.g. `"wh_def456"`).
+</ResponseField>
+
+<ResponseField name="url" type="string">
+  The URL you registered.
+</ResponseField>
+
+<ResponseField name="events" type="string[]">
+  The list of events this webhook will receive.
+</ResponseField>
+
+<ResponseField name="secret" type="string">
+  A randomly generated secret used to sign webhook payloads with HMAC-SHA256. **Store this immediately** — it is only returned in full at registration time. Use it to verify that incoming payloads originated from DSS Stringers.
+</ResponseField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.dssstringers.com/v1/webhooks \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://myapp.com/webhooks/dsss",
+    "events": ["sync.completed", "sync.failed"],
+    "project_id": "proj_abc123"
+  }'
+```
+
+```json Response
+{
+  "id": "wh_def456",
+  "url": "https://myapp.com/webhooks/dsss",
+  "events": ["sync.completed", "sync.failed"],
+  "secret": "whsec_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+}
+```
+
+</CodeGroup>
+
+---
+
+## GET /webhooks
+
+List all webhook endpoints registered to your account.
+
+### Query Parameters
+
+<ParamField query="page" type="integer" default="1">
+  Page number to retrieve.
+</ParamField>
+
+<ParamField query="limit" type="integer" default="20">
+  Number of webhooks per page. Maximum `100`.
+</ParamField>
+
+### Response — 200 OK
+
+Returns an array of webhook objects (without the `secret` field) plus a `meta` pagination object.
+
+<ResponseField name="data" type="array">
+  Array of webhook objects, each containing `id`, `url`, `events`, and optionally `project_id`.
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  <Expandable title="meta fields">
+    <ResponseField name="meta.total" type="integer">Total registered webhooks.</ResponseField>
+    <ResponseField name="meta.page" type="integer">Current page.</ResponseField>
+    <ResponseField name="meta.limit" type="integer">Items per page.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## DELETE /webhooks/:id
+
+Remove a registered webhook endpoint. DSS Stringers will immediately stop sending events to the associated URL.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the webhook to remove.
+</ParamField>
+
+### Response — 204 No Content
+
+An empty body is returned on success.
+
+```bash cURL
+curl -X DELETE https://api.dssstringers.com/v1/webhooks/wh_def456 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+---
+
+## Verifying Webhook Payloads
+
+Every request DSS Stringers sends to your endpoint includes a `X-DSSS-Signature` header containing an HMAC-SHA256 signature of the raw request body, prefixed with `sha256=`. Verify this signature using the `secret` you received when registering the webhook to confirm the payload is authentic and has not been tampered with.
+
+```javascript Node.js — Verification Helper
+const crypto = require('crypto');
+
+function verifyWebhook(payload, signature, secret) {
+  const expected = crypto
+    .createHmac('sha256', secret)
+    .update(payload)
+    .digest('hex');
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(`sha256=${expected}`)
+  );
+}
+```
+
+Call `verifyWebhook` with:
+- `payload` — the **raw** request body string (do not parse it to JSON first)
+- `signature` — the value of the `X-DSSS-Signature` header
+- `secret` — the `whsec_...` value stored in your environment
+
+Return a `2xx` response only after the signature check passes. Discard any request that fails verification.
+
+<Note>
+  If your endpoint returns a non-2xx status code, DSS Stringers retries the delivery up to **3 times** using exponential backoff. After three failed attempts, the event is marked as undelivered and no further retries are made. You can inspect delivery history from the Dashboard.
+</Note>
+
+---
+
+## Payload Reference
+
+### sync.completed
+
+```json
+{
+  "event": "sync.completed",
+  "project_id": "proj_abc123",
+  "sync_id": "sync_xyz789",
+  "pages_updated": 12,
+  "timestamp": "2024-01-15T10:30:00Z"
+}
+```
+
+### sync.failed
+
+```json
+{
+  "event": "sync.failed",
+  "project_id": "proj_abc123",
+  "sync_id": "sync_xyz788",
+  "error": "Unable to clone repository: authentication failed.",
+  "timestamp": "2024-01-14T08:00:22Z"
+}
+```
+
+### docs.published
+
+```json
+{
+  "event": "docs.published",
+  "project_id": "proj_abc123",
+  "sync_id": "sync_xyz789",
+  "published_url": "https://docs.myapp.com",
+  "timestamp": "2024-01-15T10:32:00Z"
+}
+```

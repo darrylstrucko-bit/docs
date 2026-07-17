@@ -1,0 +1,110 @@
+---
+title: "How DSS Stringers Works: The Doc Generation Pipeline"
+sidebarTitle: "How It Works"
+description: "Learn how DSS Stringers moves from a code push to published documentation — covering webhooks, AI analysis, and Mintlify site rebuilds."
+---
+
+DSS Stringers turns your Git history into a continuous documentation pipeline. Every time you push code or ship a Vercel deployment, an automated sequence kicks off: your changes are analysed by an AI model, the relevant doc pages are created or updated, and your Mintlify site is rebuilt with the latest content — all without you touching a documentation file. This page explains each stage of that pipeline so you know exactly what happens between a `git push` and a live docs update.
+
+## The pipeline at a glance
+
+<Steps>
+  <Step title="Code push or Vercel deploy">
+    The pipeline starts the moment you push a commit to your connected GitHub repository, or when a Vercel production deployment completes successfully. Both events carry the same information — a diff of what changed — so DSS Stringers treats them identically.
+
+    <Tip>
+      If you use Vercel, connect both your GitHub repo and your Vercel project in the DSS Stringers dashboard. This way, doc generation fires on the deploy event rather than the push, so your docs always reflect code that has actually shipped to production.
+    </Tip>
+  </Step>
+
+  <Step title="Webhook received and diff extracted">
+    DSS Stringers receives the incoming webhook from GitHub or Vercel and immediately extracts the file-level diff for the push. Only files that match your `include` patterns (and are not excluded) are queued for analysis — unchanged files are skipped entirely, keeping runs fast even in large repositories.
+
+    <Note>
+      Webhook payloads are verified using your project's secret token before any processing begins. DSS Stringers will reject unsigned or tampered payloads.
+    </Note>
+  </Step>
+
+  <Step title="AI analysis with Claude or Codex">
+    The changed source files are sent to the configured AI backend — either **Anthropic Claude Code** or **OpenAI Codex** — along with context from the surrounding codebase. The model reads the code, infers intent from function signatures, JSDoc comments, and call patterns, and produces or updates the corresponding documentation in Markdown.
+
+    You can choose your preferred AI backend in **Project Settings → AI Backend**. Both models are supported; you can switch at any time without losing previously generated docs.
+
+    <CardGroup cols={2}>
+      <Card title="Claude Code" icon="robot">
+        Anthropic's model excels at nuanced prose, explaining complex logic in plain language, and maintaining a consistent documentation style across large codebases.
+      </Card>
+      <Card title="OpenAI Codex" icon="microchip">
+        Codex is optimised for code-first analysis — ideal for projects with dense logic, tightly coupled modules, or heavily typed TypeScript codebases.
+      </Card>
+    </CardGroup>
+  </Step>
+
+  <Step title="Docs updated in your repository">
+    Once the AI finishes, DSS Stringers writes the generated or updated Markdown files to the `output` directory defined in your `.dssstringers.json` (default: `docs`). The changes are committed back to your repository on a dedicated `dsss/docs` branch and a pull request is opened — or, if you have enabled **auto-merge**, the changes are merged directly to your default branch.
+
+    <Warning>
+      With auto-merge enabled, documentation changes land on your default branch immediately. Review the generated content on the first few runs to make sure the output matches your standards before turning this on for production projects.
+    </Warning>
+  </Step>
+
+  <Step title="Mintlify site rebuilt and published">
+    As soon as the doc files land on your default branch, Mintlify detects the change and triggers a site rebuild. Your readers see updated documentation within moments. Because DSS Stringers writes standard Mintlify-compatible Markdown, all your existing components, navigation structure, and custom styles are preserved.
+  </Step>
+</Steps>
+
+## Supported integrations
+
+DSS Stringers is designed to fit into the tools you already use. The table below shows each integration and what it enables.
+
+| Integration | Role in the pipeline |
+|---|---|
+| **GitHub** | Source of code changes; hosts the DSS Stringers GitHub App; receives generated doc commits |
+| **Vercel** | Optional deploy-event trigger; ensures docs reflect production-ready code |
+| **Claude Code** | AI backend option for documentation generation |
+| **OpenAI Codex** | AI backend option for documentation generation |
+| **Supabase** | Stores project metadata, run history, and generated doc content for your dashboard |
+| **Mintlify** | Publishes and serves the final documentation site |
+
+For setup instructions for each integration, visit the [Integrations](/integrations/github) section.
+
+## Configuring your AI backend
+
+Open **Project Settings → AI Backend** in the dashboard and select either **Claude Code** or **Codex** from the dropdown. Save the setting — it takes effect on the next run. You can also set the backend per-project using the `ai` key in your `.dssstringers.json`:
+
+<CodeGroup>
+```json .dssstringers.json (Claude)
+{
+  "project": "my-app",
+  "ai": "claude",
+  "include": ["src/**/*.ts"],
+  "exclude": ["**/*.test.*", "node_modules"],
+  "output": "docs"
+}
+```
+
+```json .dssstringers.json (Codex)
+{
+  "project": "my-app",
+  "ai": "codex",
+  "include": ["src/**/*.ts"],
+  "exclude": ["**/*.test.*", "node_modules"],
+  "output": "docs"
+}
+```
+</CodeGroup>
+
+<Tip>
+  Not sure which model to choose? Start with **Claude Code** for most projects — it produces readable prose that works well for public-facing documentation. Switch to **Codex** if your project has heavily algorithmic code where technical precision matters more than narrative style.
+</Tip>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Connect your first project and trigger your first doc generation run in five minutes.
+  </Card>
+  <Card title="Project Configuration" icon="sliders" href="/configuration/project-setup">
+    Fine-tune your pipeline with advanced options for filtering, AI prompts, and output formatting.
+  </Card>
+</CardGroup>

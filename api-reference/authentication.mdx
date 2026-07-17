@@ -1,0 +1,59 @@
+---
+title: "Authenticating with the DSS Stringers API"
+sidebarTitle: "Authentication"
+description: "Learn how to locate, use, and rotate your DSS Stringers API key to authenticate every request you make to the API."
+---
+
+DSS Stringers uses API key authentication. Every project gets its own unique key, so access is scoped to a single project by default. You pass the key as a Bearer token in the `Authorization` header of every HTTP request — there are no cookies, sessions, or OAuth flows to manage.
+
+## Finding Your API Key
+
+Your project API key lives in the Dashboard. Navigate to **Dashboard → Project → Settings → API Keys** to copy it. Keep this tab handy when you're setting up a new integration or rotating a key.
+
+## Sending the Header
+
+Include the following header on every request:
+
+```
+Authorization: Bearer YOUR_API_KEY
+```
+
+<Warning>
+  Never hard-code your API key directly in source code or commit it to a repository. Use environment variables instead. If a key is accidentally exposed, rotate it immediately from the Dashboard — rotation invalidates the old key right away.
+</Warning>
+
+## Code Examples
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.dssstringers.com/v1/projects \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json"
+```
+
+```javascript Node.js
+const response = await fetch('https://api.dssstringers.com/v1/projects', {
+  headers: {
+    Authorization: `Bearer ${process.env.DSSS_API_KEY}`,
+    'Content-Type': 'application/json',
+  },
+});
+
+const data = await response.json();
+console.log(data);
+```
+
+</CodeGroup>
+
+In the Node.js example, the key is read from `process.env.DSSS_API_KEY`. Store your key in a `.env` file locally (and add `.env` to your `.gitignore`), and configure it as a secret environment variable in your CI/CD platform for deployed environments.
+
+## Key Rotation
+
+You can rotate your API key at any time from **Dashboard → Project → Settings → API Keys**. Rotating a key:
+
+- **Immediately** invalidates the previous key — any in-flight requests using the old key will start returning `401 invalid_api_key`.
+- Issues a brand-new key that you must deploy to all services that call the API.
+- Does **not** change your project's slug or any other settings.
+
+Plan rotations during low-traffic windows and update all consumers (CI secrets, server environment variables, etc.) before triggering the rotation.

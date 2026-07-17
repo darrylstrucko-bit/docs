@@ -1,0 +1,145 @@
+---
+title: "Auto-Publish: Automate Doc Releases on Every Deploy"
+sidebarTitle: "Auto-Publish"
+description: "Configure when and how DSS Stringers publishes generated docs — instantly on every sync, on a schedule, in preview mode, or behind a team approval gate."
+---
+
+By default, DSS Stringers pushes freshly generated `.mdx` files to the `docs` branch of your connected repository, triggering a Mintlify rebuild automatically. Auto-publish settings let you decide whether that rebuild goes live immediately, on a schedule, or only after a human review. You configure these settings per-project in the dashboard — no changes to `.dssstringers.json` are needed.
+
+## Opening publish settings
+
+Navigate to **Dashboard → Projects → \[your project\] → Settings → Publish → Auto-publish**. The panel shows your current publish mode, the target branch, and any schedule or approval rules you have configured.
+
+## Publish modes
+
+DSS Stringers offers four publish modes. Each balances speed against the level of human oversight your team requires.
+
+<AccordionGroup>
+  <Accordion title="Auto-publish — instant, no review" icon="bolt">
+    Every time a documentation sync completes successfully, DSS Stringers
+    immediately commits the generated files to your `docs` branch. Mintlify
+    detects the push and rebuilds your site within seconds.
+
+    **Best for:** open-source projects, internal tools, or teams that treat
+    documentation like code and rely on automated quality checks rather than
+    manual review.
+
+    **How to enable:** Toggle **Publish on every sync** to the on position
+    under **Project Settings → Publish → Auto-publish**.
+
+    <Warning>
+      With Auto-publish active, a bad commit to your watched branch can trigger
+      incorrect docs that go live before anyone reviews them. Pair this mode
+      with Doc Rules exclusions and a thorough `include`/`exclude` config to
+      minimise the risk.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Scheduled — publish at a set interval" icon="calendar">
+    DSS Stringers generates docs on every sync as usual, but holds the output
+    in a staging area. At your chosen interval — hourly, daily, or weekly — it
+    bundles all pending changes into a single commit and pushes to the `docs`
+    branch.
+
+    **Best for:** active codebases that receive many small commits throughout
+    the day, where rebuilding the docs site on every push would be noisy or
+    expensive.
+
+    **How to configure:**
+    1. Select **Scheduled** as your publish mode.
+    2. Choose a cadence from the dropdown: **Hourly**, **Daily**, or **Weekly**.
+    3. For daily or weekly schedules, set the preferred publish time and day.
+    4. Click **Save**.
+
+    <Tip>
+      Daily publishing at a low-traffic hour (e.g., 02:00 UTC) is a good
+      default for most production projects. Your users always see docs that are
+      at most 24 hours behind the codebase.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Preview — review before publish" icon="eye">
+    Docs are generated and stored privately inside the DSS Stringers dashboard
+    after every sync. Nothing is pushed to your repository until you explicitly
+    approve a preview. You review the full rendered output — including diff
+    highlighting against the currently live docs — before committing to
+    publish.
+
+    **Best for:** developer-facing SDKs, paid API products, or any project
+    where documentation errors carry a high reputational or support cost.
+
+    **How to enable:** Select **Preview** as your publish mode. After each
+    sync, a notification appears in the dashboard (and optionally by email or
+    Slack) prompting you to review the pending preview.
+
+    **To publish a preview:**
+    1. Open the notification or navigate to **Dashboard → Previews**.
+    2. Review the diff and the rendered pages.
+    3. Click **Publish** to push to the `docs` branch, or **Discard** to
+       drop the pending output.
+  </Accordion>
+
+  <Accordion title="Approval required — team approval gate" icon="shield-check">
+    Like Preview mode, docs are generated and held privately after each sync.
+    The difference is that publishing requires an explicit approval action from
+    a team member with the **Reviewer** or **Admin** role — the author of the
+    triggering commit cannot approve their own docs.
+
+    **Best for:** regulated industries, multi-author projects with strict
+    editorial standards, or teams that require a four-eyes policy on all
+    published content.
+
+    **How to enable:** Select **Approval required** as your publish mode.
+    Specify one or more required approvers by GitHub username or DSS Stringers
+    team role.
+
+    **Approval flow:**
+    <Steps>
+      <Step title="Sync completes">
+        DSS Stringers generates docs and notifies all designated approvers via
+        dashboard notification, email, or Slack (depending on your notification
+        settings).
+      </Step>
+      <Step title="Reviewer opens the preview">
+        The approver navigates to **Dashboard → Pending Approvals** and
+        reviews the rendered diff.
+      </Step>
+      <Step title="Approve or request changes">
+        The reviewer clicks **Approve & Publish** to push the docs live, or
+        **Request changes** to send feedback back to the author before the next
+        sync.
+      </Step>
+    </Steps>
+
+    <Note>
+      Approvals expire after 7 days by default. If an approval is not given
+      within that window, the pending output is discarded and a fresh sync is
+      required. You can adjust the expiry window under
+      **Project Settings → Publish → Approval expiry**.
+    </Note>
+  </Accordion>
+</AccordionGroup>
+
+## Publish mode comparison
+
+| Mode | Docs generated on every sync | Pushed to repo | Human review required |
+|---|---|---|---|
+| **Auto-publish** | ✅ | Immediately | ✗ |
+| **Scheduled** | ✅ (held until interval) | At set interval | ✗ |
+| **Preview** | ✅ (held in dashboard) | On explicit approval | Author |
+| **Approval required** | ✅ (held in dashboard) | On explicit approval | Designated reviewer |
+
+## Target branch
+
+By default, DSS Stringers pushes generated docs to a branch named `docs` in your connected repository. To use a different branch, go to **Project Settings → Publish → Target branch** and enter the branch name. The branch is created automatically if it does not exist.
+
+<Note>
+  Keep your `docs` branch separate from your source branch. This lets you
+  review documentation changes in pull requests without mixing them with
+  application code, and makes it straightforward to revert a bad docs release
+  independently.
+</Note>
+
+## Switching publish modes
+
+You can change your publish mode at any time from the dashboard. Switching modes does not affect docs that have already been published — it only changes how future syncs are handled. Any output currently sitting in the preview staging area is discarded when you switch away from **Preview** or **Approval required** mode.

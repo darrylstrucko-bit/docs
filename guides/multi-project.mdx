@@ -1,0 +1,88 @@
+---
+title: "Manage Documentation for Multiple Node.js Projects"
+sidebarTitle: "Multi-Project"
+description: "Create and organise multiple DSS Stringers projects from one account, including monorepo setups with per-package configuration files."
+---
+
+A single DSS Stringers account can manage documentation for as many Node.js projects as you need — separate repos, packages inside a monorepo, or a mixture of both. Each project is fully independent, with its own AI configuration, doc rules, API key, and webhook endpoint, yet all of them are visible and manageable from one unified dashboard.
+
+## How projects are isolated
+
+Every project you create gets:
+
+- A **unique API key** (`DSSS_API_KEY`) scoped only to that project.
+- A **dedicated webhook endpoint** so triggers from different repos never interfere.
+- Its own **Doc Rules** prompt, AI model selection, and output settings.
+- A separate **Mintlify site** (or a sub-path on a shared site, if you prefer).
+
+Isolation means a misconfiguration in one project cannot affect any other.
+
+## Adding a second project
+
+<Steps>
+  <Step title="Open the Projects view">
+    In the DSS Stringers dashboard, click **Projects** in the left sidebar to see all your existing projects and their last-sync status.
+  </Step>
+
+  <Step title="Click New Project">
+    Click **New Project**, give the new project a name and slug, then select the repository (or monorepo package path) you want to document.
+  </Step>
+
+  <Step title="Install or reuse the GitHub App">
+    If the new project lives in a repository where the GitHub App is already installed, DSS Stringers detects this automatically. For a new repository, click **Install GitHub App** and grant access to the additional repo.
+  </Step>
+
+  <Step title="Add the new API key to repo secrets">
+    Copy the new project's `DSSS_API_KEY` from **Project Settings → API Keys** and add it as a GitHub Actions secret in the target repository. If multiple projects share one repository (monorepo), store each key under a distinct secret name, for example `DSSS_API_KEY_API` and `DSSS_API_KEY_WEB`.
+  </Step>
+
+  <Step title="Add a .dssstringers.json for the new project">
+    Create a configuration file in the package or directory you want to document. Commit and push — DSS Stringers will pick it up on the next trigger.
+  </Step>
+</Steps>
+
+## Monorepo configuration
+
+When multiple packages live inside one repository, place a separate `.dssstringers.json` in each package directory. The `output` field controls where the generated MDX files are written relative to that config file.
+
+<CodeGroup>
+```json packages/api/.dssstringers.json
+{
+  "project": "my-app-api",
+  "include": ["src/**"],
+  "output": "../../docs/api"
+}
+```
+
+```json packages/web/.dssstringers.json
+{
+  "project": "my-app-web",
+  "include": ["src/**"],
+  "output": "../../docs/web"
+}
+```
+</CodeGroup>
+
+With this setup, a single push to `main` triggers generation for every package that has a `.dssstringers.json`, and each writes its output to its own subdirectory inside a shared `docs/` folder.
+
+## Organising projects with tags
+
+As your project count grows, use **tags** to keep things organised. Tags are free-form labels you assign from the project settings panel — for example `backend`, `frontend`, `internal`, or `v2`. You can then filter the Projects view by tag to focus on a subset of projects.
+
+## Cross-project linking
+
+Reference another project's documentation directly inside your JSDoc comments using the `@project:` prefix. DSS Stringers resolves these references at generation time and inserts working hyperlinks into the output.
+
+```javascript
+/**
+ * Submits an order to the fulfilment service.
+ * @see @project:my-app-api/OrderService.createOrder
+ */
+async function submitOrder(cart) { ... }
+```
+
+This produces a link that points to the `OrderService.createOrder` page inside the `my-app-api` project's docs site, keeping cross-service documentation connected without manual URL management.
+
+<Tip>
+  Use the dashboard's **Projects** view as your operations home base. It shows every project alongside its last-sync timestamp, current status (idle, generating, error), and a direct link to the live docs — so you can spot a stale or broken project at a glance without opening each one individually.
+</Tip>

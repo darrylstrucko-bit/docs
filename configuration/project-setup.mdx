@@ -1,0 +1,168 @@
+---
+title: "Project Setup: .dssstringers.json Config File"
+sidebarTitle: "Project Setup"
+description: "Configure DSS Stringers for your repo using the .dssstringers.json file. Control which files are analysed, which AI backend runs, and where docs are written."
+---
+
+Every DSS Stringers project is driven by a single configuration file — `.dssstringers.json` — that lives at the root of your repository. When DSS Stringers detects a new commit or a Vercel deploy event, it reads this file first to understand the shape of your project before it analyses a single line of code. Place the file at the repo root and commit it alongside your source so every branch stays in sync with its own documentation settings.
+
+## Example configuration
+
+Start with the full example below, then customise each field to match your project. The sections that follow explain every option in detail.
+
+```json .dssstringers.json
+{
+  "project": "my-node-app",
+  "include": ["src/**/*.js", "src/**/*.ts"],
+  "exclude": ["**/*.test.*", "**/*.spec.*", "node_modules"],
+  "output": "docs",
+  "ai": "claude",
+  "model": "claude-3-5-sonnet-20241022",
+  "branch": "main",
+  "language": "en"
+}
+```
+
+<Note>
+  All fields except `project` are optional. DSS Stringers applies sensible
+  defaults for every omitted field, so a minimal config only needs the project
+  slug.
+</Note>
+
+## Field reference
+
+<ParamField path="project" type="string" required>
+  The project slug from your DSS Stringers dashboard. You can find this under
+  **Dashboard → Projects → \[your project\] → Settings → General**. The slug
+  must match exactly — it is used to route generated docs to the correct
+  Mintlify site and Supabase project record.
+
+  ```json
+  { "project": "my-node-app" }
+  ```
+</ParamField>
+
+<ParamField path="include" type="string[]">
+  Glob patterns that tell DSS Stringers which files to analyse. Only files
+  matching at least one pattern are processed. Patterns follow
+  [micromatch](https://github.com/micromatch/micromatch) syntax.
+
+  **Default:** all `.js`, `.ts`, `.jsx`, and `.tsx` files anywhere in the repo
+  (`**/*.{js,ts,jsx,tsx}`).
+
+  ```json
+  { "include": ["src/**/*.js", "src/**/*.ts"] }
+  ```
+
+  <Tip>
+    Keep `include` as narrow as possible. Analysing only the files your users
+    actually import speeds up generation and reduces AI token usage.
+  </Tip>
+</ParamField>
+
+<ParamField path="exclude" type="string[]">
+  Glob patterns for files that should be skipped even if they match an
+  `include` pattern. Exclusions take priority over inclusions.
+
+  **Default:** `["node_modules/**", "**/*.test.*", "**/*.spec.*", "dist/**", "build/**"]`
+
+  ```json
+  { "exclude": ["**/*.test.*", "**/*.spec.*", "node_modules"] }
+  ```
+</ParamField>
+
+<ParamField path="output" type="string">
+  The directory — relative to your repo root — where DSS Stringers writes the
+  generated `.mdx` files. The directory is created automatically if it does not
+  already exist.
+
+  **Default:** `"docs"`
+
+  ```json
+  { "output": "docs" }
+  ```
+
+  <Warning>
+    If you point `output` at a directory that already contains hand-written
+    docs, DSS Stringers will overwrite any file whose name matches a generated
+    page. Use a dedicated subdirectory (e.g., `"docs/api"`) to avoid
+    accidental overwrites.
+  </Warning>
+</ParamField>
+
+<ParamField path="ai" type='"claude" | "openai"'>
+  Selects the AI backend used for documentation generation. Set to `"claude"`
+  to use Anthropic Claude Code or `"openai"` to use OpenAI Codex.
+
+  **Default:** inherits whichever backend is configured in your DSS Stringers
+  dashboard under **Project Settings → AI → Default backend**.
+
+  ```json
+  { "ai": "claude" }
+  ```
+</ParamField>
+
+<ParamField path="model" type="string">
+  Overrides the specific model version used for generation. When omitted, DSS
+  Stringers uses the latest stable model for the selected backend.
+
+  Valid values depend on your chosen `ai` backend:
+
+  | Backend | Example model strings |
+  |---|---|
+  | `claude` | `claude-3-5-sonnet-20241022`, `claude-3-opus-20240229` |
+  | `openai` | `codex-mini-latest`, `gpt-4o` |
+
+  ```json
+  { "ai": "claude", "model": "claude-3-5-sonnet-20241022" }
+  ```
+
+  <Tip>
+    Pin a specific model in production to get deterministic output. Unpinned
+    configurations automatically follow the latest model, which may change
+    tone or formatting between releases.
+  </Tip>
+</ParamField>
+
+<ParamField path="branch" type="string">
+  The Git branch DSS Stringers monitors for changes. When a commit lands on
+  this branch (or a Vercel production deploy targets it), a documentation sync
+  is triggered automatically.
+
+  **Default:** `"main"`
+
+  ```json
+  { "branch": "main" }
+  ```
+
+  <Note>
+    To trigger docs generation on a different branch — for example, a staging
+    environment on `develop` — create a second DSS Stringers project pointing
+    at the same repo with `"branch": "develop"`.
+  </Note>
+</ParamField>
+
+<ParamField path="language" type="string">
+  The [BCP 47 language tag](https://www.ietf.org/rfc/bcp/bcp47.txt) that
+  controls the language DSS Stringers uses when writing generated documentation.
+  The AI backend will produce prose, headings, and inline comments in the
+  specified language.
+
+  **Default:** `"en"` (English)
+
+  ```json
+  { "language": "en" }
+  ```
+</ParamField>
+
+## Minimal configuration
+
+If you want to get started quickly, the only required field is `project`. DSS Stringers will apply all defaults for the remaining fields.
+
+```json .dssstringers.json
+{
+  "project": "my-node-app"
+}
+```
+
+Commit this file, push to your default branch, and DSS Stringers will begin analysing your JavaScript and TypeScript files on the next deploy.

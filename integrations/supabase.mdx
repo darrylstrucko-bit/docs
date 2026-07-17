@@ -1,0 +1,87 @@
+---
+title: "Document Your Supabase Database with DSS Stringers"
+sidebarTitle: "Supabase"
+description: "Introspect your Supabase schema and auto-generate table and column reference pages that stay in sync with your database structure."
+---
+
+DSS Stringers can connect directly to your Supabase project, introspect your database schema, and generate a clean, always-current reference for every table, column, and relationship. Whenever your schema changes, the next documentation run picks up the diff and updates the relevant pages automatically.
+
+<Warning>
+  The integration requires your Supabase **service role key**, which has full, unrestricted access to your database. Store it carefully and **rotate it immediately** if it is ever exposed. DSS Stringers stores the key encrypted at rest and never logs it, but you are responsible for its security outside the platform.
+</Warning>
+
+## Connect Supabase to your project
+
+<Steps>
+  <Step title="Open integration settings">
+    In the DSS Stringers dashboard, select your project and go to **Project Settings → Integrations → Supabase**.
+  </Step>
+  <Step title="Enter your Supabase project URL">
+    Copy your project URL from the Supabase dashboard under **Settings → API → Project URL** (it looks like `https://xyzabc.supabase.co`) and paste it into the **Project URL** field in DSS Stringers.
+  </Step>
+  <Step title="Enter your service role key">
+    In Supabase, go to **Settings → API → Project API Keys** and copy the **service\_role** key. Paste it into the **Service Role Key** field in DSS Stringers.
+
+    <Tip>
+      If you have not already restricted your service role key's usage to specific IP ranges in Supabase, consider doing so to limit exposure.
+    </Tip>
+  </Step>
+  <Step title="Choose schemas to document">
+    Select which schemas DSS Stringers should introspect. The `public` schema is selected by default. Add additional schemas (for example, `auth` or `storage`) as needed.
+  </Step>
+  <Step title="Save and run an initial sync">
+    Click **Save & Sync**. DSS Stringers connects to your database, reads the schema metadata, and generates the initial set of reference pages.
+  </Step>
+</Steps>
+
+## What gets generated
+
+For each table in the selected schemas, DSS Stringers produces a reference page that includes:
+
+- A prose summary of the table's purpose (inferred from column names, comments, and foreign key relationships)
+- A full column reference with name, data type, nullability, and default value
+- Foreign key relationships to other tables
+- Any Postgres column comments you have added
+
+Here is a short example of what a generated table reference looks like:
+
+```mdx docs/reference/database/users.mdx
+---
+title: "users"
+description: "Stores registered user accounts and profile metadata."
+---
+
+The `users` table is the central identity record for every account in the
+application. Each row corresponds to one authenticated user.
+
+## Columns
+
+| Column | Type | Nullable | Default | Description |
+| --- | --- | --- | --- | --- |
+| `id` | `uuid` | No | `gen_random_uuid()` | Primary key. |
+| `email` | `text` | No | — | Unique email address used for authentication. |
+| `created_at` | `timestamptz` | No | `now()` | Timestamp of account creation. |
+| `display_name` | `text` | Yes | — | Optional public display name. |
+
+## Relationships
+
+- `id` → `posts.author_id` (one-to-many)
+- `id` → `subscriptions.user_id` (one-to-one)
+```
+
+## Important limitations
+
+<CardGroup cols={2}>
+  <Card title="Read-only introspection" icon="eye">
+    DSS Stringers only reads schema metadata. It never creates, modifies, or deletes any tables, rows, or database objects.
+  </Card>
+  <Card title="Schema changes" icon="arrows-rotate">
+    Schema reference pages are regenerated on every documentation run. Drop a column and the next run removes it from the docs automatically.
+  </Card>
+  <Card title="No query execution" icon="ban">
+    DSS Stringers does not execute queries against your data. Only `information_schema` and `pg_catalog` metadata is accessed.
+  </Card>
+  <Card title="RLS policies" icon="lock">
+    Row Level Security policy definitions are documented as metadata but are never evaluated or bypassed during introspection.
+  </Card>
+</CardGroup>

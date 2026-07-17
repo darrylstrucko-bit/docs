@@ -1,0 +1,143 @@
+---
+title: "Shape and Customise Your Generated Documentation"
+sidebarTitle: "Customising Output"
+description: "Control tone, structure, and content of DSS Stringers output using Doc Rules, JSDoc annotations, README context files, and MDX overrides."
+---
+
+DSS Stringers gives you several layers of control over how generated docs look and read — from account-wide tone settings down to page-level overrides for specific source files. Start with the coarser controls and add finer-grained customisation only where you need it.
+
+## Set tone with Doc Rules
+
+The **Doc Rules** system prompt is the highest-level customisation available. It tells the AI how to write — the vocabulary, formality, and level of detail to use across your entire project.
+
+Open **Project Settings → Doc Rules** and edit the system prompt directly. Some examples:
+
+<Tabs>
+  <Tab title="Formal / enterprise">
+    ```
+    Write in a formal, professional tone suitable for enterprise developers.
+    Use precise technical language. Avoid contractions and colloquialisms.
+    Prefer complete sentences over bullet fragments.
+    ```
+  </Tab>
+  <Tab title="Casual / startup">
+    ```
+    Write in a friendly, conversational tone. Use contractions freely.
+    Be concise but approachable — imagine explaining this to a smart colleague
+    over coffee, not in a board meeting.
+    ```
+  </Tab>
+  <Tab title="Terse / reference">
+    ```
+    Be maximally terse. One sentence per concept. No filler words.
+    Prioritise scannable output: parameters, return types, exceptions, example.
+    ```
+  </Tab>
+  <Tab title="Verbose / tutorial">
+    ```
+    Write in depth. Explain the "why" behind each parameter and design choice.
+    Include multiple usage examples. Assume the reader is new to this codebase.
+    ```
+  </Tab>
+</Tabs>
+
+## Enrich source material with JSDoc
+
+The AI produces better documentation when you give it richer source material. Annotate your functions with standard JSDoc tags — DSS Stringers parses them and passes the structured data directly to the model.
+
+```javascript
+/**
+ * Fetches a user profile from the database.
+ * @param {string} userId - The UUID of the user.
+ * @param {Object} [options] - Optional settings.
+ * @param {boolean} [options.includeDeleted=false] - Include soft-deleted users.
+ * @returns {Promise<User>} The user object.
+ * @throws {NotFoundError} If the user does not exist.
+ * @example
+ * const user = await getUser('abc-123');
+ * console.log(user.email);
+ * @category Users
+ */
+async function getUser(userId, options = {}) { ... }
+```
+
+The most impactful tags to add are:
+
+| Tag | Effect on output |
+|-----|-----------------|
+| `@param` | Generates a typed parameters table |
+| `@returns` | Documents the return type and shape |
+| `@throws` | Adds an exceptions section |
+| `@example` | Inserts a runnable code block |
+| `@category` | Groups functions into named sections (see below) |
+
+<Note>
+  You don't need 100 % JSDoc coverage to see improvements. Even adding `@param` and `@returns` to your ten most-used functions will noticeably raise the quality of the generated output.
+</Note>
+
+## Use README files for module-level context
+
+Place a `README.md` inside any directory that is covered by your `include` glob. DSS Stringers reads it as module-level context and uses it to write the introductory section of that module's documentation page — including architecture decisions, usage patterns, and caveats that are difficult to infer from function signatures alone.
+
+```
+src/
+  users/
+    README.md        ← DSS Stringers reads this for module context
+    userService.js
+    userRepository.js
+```
+
+Keep these READMEs focused on *why* the module exists and *how* it fits into the broader system, rather than repeating what the code already says.
+
+## Group functions with @category
+
+Use the `@category` JSDoc tag to sort functions and classes into logical sections in the generated output. All items that share a category are rendered together under a named heading, regardless of which source file they live in.
+
+```javascript
+/** @category Authentication */
+async function login(email, password) { ... }
+
+/** @category Authentication */
+async function logout(sessionId) { ... }
+
+/** @category Users */
+async function getUser(userId) { ... }
+```
+
+This is especially useful for large modules where the file structure does not map neatly onto the conceptual structure you want docs readers to see.
+
+## Override a page with hand-written content
+
+For pages where AI-generated content is not appropriate — marketing-heavy landing sections, conceptual guides, migration notes — create a `.override.mdx` file alongside the source file. DSS Stringers publishes your hand-written file verbatim and skips AI generation for that page entirely.
+
+```
+src/
+  payments/
+    paymentService.js
+    paymentService.override.mdx   ← replaces AI output for this file
+```
+
+<Warning>
+  Override files are **never overwritten** by DSS Stringers. If you rename or delete the corresponding source file, remember to clean up the `.override.mdx` manually — otherwise it will continue to appear as an orphaned page in your docs.
+</Warning>
+
+<Tip>
+  Use overrides sparingly. The more hand-written pages you maintain, the more work is required to keep them current. Reserve overrides for content that genuinely cannot be generated — and let DSS Stringers handle everything else.
+</Tip>
+
+## Customisation layers at a glance
+
+<CardGroup cols={2}>
+  <Card title="Doc Rules" icon="sliders">
+    Account- or project-wide tone and style instructions applied to every generated page.
+  </Card>
+  <Card title="JSDoc annotations" icon="code">
+    Per-function metadata that gives the AI precise, structured source material to work from.
+  </Card>
+  <Card title="README context files" icon="book-open">
+    Module-level narrative that anchors generated docs in real architecture and intent.
+  </Card>
+  <Card title=".override.mdx files" icon="pen-to-square">
+    Full page replacements for content that must be hand-crafted and never auto-generated.
+  </Card>
+</CardGroup>

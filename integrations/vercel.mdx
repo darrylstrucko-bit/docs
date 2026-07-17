@@ -1,0 +1,75 @@
+---
+title: "Trigger Doc Generation on Every Vercel Deploy"
+sidebarTitle: "Vercel"
+description: "Wire a Vercel Deploy Hook to DSS Stringers so your documentation regenerates automatically on every production or preview deployment."
+---
+
+Connecting Vercel to DSS Stringers means your documentation is rebuilt every time a new deployment completes — no separate CI step required. The integration works by registering a Deploy Hook URL in your Vercel project that calls DSS Stringers the moment Vercel finishes deploying your application.
+
+## Retrieve the Deploy Hook URL
+
+<Steps>
+  <Step title="Open your project settings">
+    In the DSS Stringers dashboard, select your project and navigate to **Settings → Integrations → Vercel**.
+  </Step>
+  <Step title="Copy the Deploy Hook URL">
+    Click **Generate Hook** (or copy the existing URL if one has already been created). The URL follows this format:
+
+    ```
+    https://hooks.dssstringers.com/vercel/{project-id}?token={hook-token}
+    ```
+
+    Keep this URL private — anyone who has it can trigger a documentation rebuild on your project.
+  </Step>
+</Steps>
+
+## Register the hook in Vercel
+
+<Steps>
+  <Step title="Open your Vercel project">
+    Go to [vercel.com](https://vercel.com), select the project you want to connect, then open **Settings → Git**.
+  </Step>
+  <Step title="Add a Deploy Hook">
+    Scroll to the **Deploy Hooks** section and click **Create Hook**.
+  </Step>
+  <Step title="Configure the hook">
+    Give the hook a recognisable name (for example, `DSS Stringers Docs`) and paste the URL you copied from the DSS Stringers dashboard.
+  </Step>
+  <Step title="Save">
+    Click **Create Hook**. Vercel will call this URL after every successful deployment on the selected branch.
+  </Step>
+</Steps>
+
+## Limit triggers to production deployments only
+
+By default, the Deploy Hook fires on both production and preview deployments. If you only want documentation to regenerate when code reaches production, append the `environment` query parameter to your hook URL before pasting it into Vercel.
+
+```
+https://hooks.dssstringers.com/vercel/{project-id}?token={hook-token}&environment=production
+```
+
+DSS Stringers inspects the `environment` parameter on every incoming request and silently ignores calls that do not match the specified value. Preview deployments continue to deploy to Vercel normally — they simply do not trigger a doc rebuild.
+
+<Tip>
+  For teams that use Vercel preview deployments heavily, filtering to `environment=production` helps conserve your monthly doc generation quota.
+</Tip>
+
+## Verify the integration
+
+After saving the hook in Vercel, push a commit (or redeploy manually) to confirm everything is wired up correctly.
+
+<Steps>
+  <Step title="Trigger a deployment">
+    Push a commit to your production branch or click **Redeploy** on an existing deployment in the Vercel dashboard.
+  </Step>
+  <Step title="Check the DSS Stringers dashboard">
+    In DSS Stringers, open **Activity** on your project. A new doc generation run should appear within a few seconds of the Vercel deployment completing.
+  </Step>
+  <Step title="Confirm the published docs">
+    Once the run completes, open your docs site to verify that the latest changes are reflected.
+  </Step>
+</Steps>
+
+<Note>
+  If the activity log shows no new run after a deployment, confirm that the hook URL in Vercel matches exactly what the DSS Stringers dashboard displays — including the `token` parameter.
+</Note>

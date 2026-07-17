@@ -1,47 +1,84 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Quickstart: Connect Your First Node.js Project"
+sidebarTitle: "Quickstart"
+description: "Go from sign-up to auto-generated, published documentation for your Node.js project in under five minutes with DSS Stringers."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
-
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
-
-## Prerequisites
-
-Before you begin, you must have:
-
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+This guide walks you through connecting your first Node.js project to DSS Stringers. By the end you will have a working pipeline that automatically generates and publishes documentation every time you push to GitHub. The whole process takes about five minutes.
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
+  <Step title="Create your account">
+    Go to [app.dssstringers.com](https://app.dssstringers.com) and sign up for a free account. Once you are logged in, click **New Project**, give it a name that matches your repository, and confirm.
 
-    ```bash
-    npm install your-package
-    ```
+    <Note>
+      Each project maps to a single GitHub repository. If you have multiple repos to document, create a separate project for each one.
+    </Note>
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
 
-    ```bash
-    your-cli init
-    ```
+  <Step title="Copy your API key">
+    After creating the project, DSS Stringers generates a unique API key for it. Open **Project Settings → API Key** and copy the value — you will need it in step 4.
+
+    <Warning>
+      Treat your API key like a password. Never commit it directly to your repository or share it in public channels.
+    </Warning>
   </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
 
-    ```bash
-    your-cli start
-    ```
+  <Step title="Install the DSS Stringers GitHub App">
+    In the project dashboard, click **Connect Repository** and follow the prompt to install the **DSS Stringers GitHub App** on your GitHub account or organisation. Select the specific repository you want to document and confirm the permissions.
+
+    The app requires read access to your code and the ability to receive push webhook events. DSS Stringers does not write to your repository.
+  </Step>
+
+  <Step title="Add your API key as a repository secret">
+    Navigate to your repository on GitHub, then go to **Settings → Secrets and variables → Actions** and click **New repository secret**. Set the name to `DSSS_API_KEY` and paste in the key you copied in step 2.
+
+    DSS Stringers reads this secret automatically via the GitHub App — no workflow file changes are required.
+  </Step>
+
+  <Step title="Push a commit and watch your docs appear">
+    Make any change to your codebase and push it to your default branch. DSS Stringers receives the webhook, analyses your code changes using the configured AI backend, and publishes updated documentation to your Mintlify site within a few minutes.
+
+    You can monitor the progress in real time from the **Runs** tab of your project dashboard.
+
+    <Note>
+      Vercel deploys also trigger doc generation automatically. If your project is connected to Vercel, a successful production deployment will fire the same pipeline — you do not need to push a separate commit to GitHub.
+    </Note>
   </Step>
 </Steps>
 
-<Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
+## Optional: add a configuration file
 
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
+By default DSS Stringers documents all JavaScript and TypeScript source files it finds in your repository. For more control over what gets analysed, add a `.dssstringers.json` file to your project root.
+
+<CodeGroup>
+```json .dssstringers.json
+{
+  "project": "my-app",
+  "include": ["src/**/*.js", "src/**/*.ts"],
+  "exclude": ["**/*.test.*", "node_modules"],
+  "output": "docs"
+}
+```
+</CodeGroup>
+
+| Field | Type | Description |
+|---|---|---|
+| `project` | `string` | The project name shown in your DSS Stringers dashboard. |
+| `include` | `string[]` | Glob patterns for files to analyse. Defaults to all `.js` and `.ts` files. |
+| `exclude` | `string[]` | Glob patterns for files to skip. Test files and `node_modules` are excluded by default. |
+| `output` | `string` | The directory where generated doc source files are written before publishing. |
+
+<Tip>
+  Commit your `.dssstringers.json` to version control so every team member and every CI run uses the same documentation configuration.
 </Tip>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="How It Works" icon="gears" href="/how-it-works">
+    Dive deeper into the generation pipeline and learn how AI models analyse your code.
+  </Card>
+  <Card title="First Project Guide" icon="book-open" href="/guides/first-project">
+    A longer walkthrough covering advanced configuration, custom templates, and team access.
+  </Card>
+</CardGroup>

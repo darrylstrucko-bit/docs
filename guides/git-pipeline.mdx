@@ -1,0 +1,82 @@
+---
+title: "Set Up a Git-to-Docs Pipeline with Vercel"
+sidebarTitle: "Git Pipeline"
+description: "Chain GitHub pushes, Vercel deploys, and DSS Stringers doc generation into a single automated pipeline so docs stay in sync with production."
+---
+
+DSS Stringers fits naturally into a Vercel-based deployment workflow. You can trigger doc generation in parallel with your Vercel deploy, or — for tighter consistency — wait until Vercel confirms a successful production deploy before regenerating docs. This guide covers both approaches and explains how to combine them safely.
+
+## Recommended workflow
+
+The recommended setup for teams using Vercel is a fully automated pipeline where every production push flows through four stages without any manual intervention.
+
+<Steps>
+  <Step title="Push to GitHub">
+    A developer merges a pull request or pushes directly to `main`. This single event starts the pipeline and fans out to two parallel processes.
+  </Step>
+
+  <Step title="Vercel deploys your app (parallel)">
+    Vercel's GitHub integration detects the push and begins building and deploying your application. This happens independently of DSS Stringers.
+  </Step>
+
+  <Step title="DSS Stringers generates docs (parallel)">
+    Simultaneously, the DSS Stringers GitHub App detects the same push and queues a documentation generation job. Both processes run in parallel, so neither blocks the other.
+  </Step>
+
+  <Step title="Mintlify publishes the updated docs">
+    Once generation completes, DSS Stringers pushes the updated MDX files to your connected Mintlify project. Mintlify detects the change and rebuilds the docs site — typically within 60 seconds of the original push.
+  </Step>
+</Steps>
+
+## Using the Vercel Deploy Hook (recommended for production)
+
+If you want docs to reflect only what is actually live in production — not every push — use the **Vercel Deploy Hook** method instead of (or in addition to) the GitHub integration. In this setup, DSS Stringers listens for a successful Vercel production deploy before generating docs.
+
+### Step 1: Copy your DSS Stringers webhook URL
+
+In the DSS Stringers dashboard, go to **Project Settings → Triggers** and copy the **Inbound Webhook URL**. It follows this pattern:
+
+```
+https://hooks.dssstringers.com/v1/trigger/<project-slug>?token=<webhook-token>
+```
+
+Keep this URL secret — anyone with it can trigger a doc generation run.
+
+### Step 2: Add the webhook as a Vercel Deploy Hook
+
+1. Open your project in the [Vercel dashboard](https://vercel.com/dashboard).
+2. Navigate to **Settings → Git → Deploy Hooks**.
+3. Create a new hook named `DSS Stringers` targeting your **production** branch (usually `main`).
+4. Paste the DSS Stringers inbound webhook URL into the **URL** field and save.
+
+Vercel will now `POST` to that URL after every successful production deployment.
+
+### Step 3: Disable the direct GitHub trigger (optional)
+
+If you want docs to update *only* after a successful Vercel deploy — never on a push that Vercel rejects — go to **Project Settings → Triggers** in DSS Stringers and toggle off **GitHub Push Trigger**. The Vercel Deploy Hook becomes the sole trigger.
+
+<Warning>
+  Failed Vercel deploys do **not** trigger doc generation when you use the Deploy Hook method. If Vercel rolls back or the build errors out, your existing docs remain unchanged until the next successful deploy. This is intentional — it prevents docs from drifting ahead of what users actually see.
+</Warning>
+
+## Running both triggers simultaneously
+
+You may want the speed of the parallel GitHub trigger during development, but also the safety guarantee of the Vercel hook for production branches. DSS Stringers handles this gracefully.
+
+<Note>
+  The GitHub integration and the Vercel Deploy Hook can both be active at the same time. If a single push causes both triggers to fire within a short window, DSS Stringers deduplicates them and runs only one generation job — you will never be billed or rate-limited for duplicate triggers.
+</Note>
+
+## Verifying the pipeline
+
+After completing setup, push a small change to `main` and watch the following sequence in your dashboards:
+
+| Time | Event |
+|------|-------|
+| 0 s  | GitHub push detected |
+| ~5 s | DSS Stringers job queued |
+| ~30–90 s | Docs generated |
+| ~60–120 s | Mintlify site updated |
+| ~60–180 s | Vercel deploy hook fires (if using hook method) |
+
+You can inspect every trigger and its outcome in **Project Settings → Trigger History**.

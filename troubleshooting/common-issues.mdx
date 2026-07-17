@@ -1,0 +1,85 @@
+---
+title: "Common Issues & Troubleshooting Guide"
+sidebarTitle: "Common Issues"
+description: "Diagnose and resolve the most frequent problems encountered with DSS Stringers, from missing doc generation to AI quota errors."
+---
+
+When something goes wrong with your DSS Stringers pipeline, the root cause usually falls into one of a handful of categories: a misconfigured secret, a mismatch between your config file and your repo, or a hiccup with an upstream integration. Work through the relevant accordion below to get back on track quickly.
+
+<AccordionGroup>
+  <Accordion title="Docs not generating after a push">
+    If a push to your repository completes successfully but no new documentation appears, run through the following checks in order.
+
+    1. **Confirm the GitHub App is installed.** Open your repository on GitHub and go to **Settings > Integrations > GitHub Apps**. DSS Stringers should appear with read access to code and write access to checks. If it is missing, reinstall it from your DSS Stringers dashboard under **Integrations > GitHub**.
+
+    2. **Verify the `DSSS_API_KEY` secret.** Navigate to your repository's **Settings > Secrets and variables > Actions** and confirm the secret named `DSSS_API_KEY` exists and contains no surrounding whitespace. Recreate it from **Project Settings > API Keys** if you are unsure of its value.
+
+    3. **Check your target branch.** Open `.dssstringers.json` at the root of your repository and confirm the `branch` field matches the branch you pushed to. The default is `main` — if you push to `develop` or a feature branch without updating this value, the sync will not fire.
+
+    4. **Review the Sync Log.** In the DSS Stringers dashboard, open your project and click **Sync Log**. Any pipeline error is recorded there with a timestamp and a human-readable message that points to the exact failure step.
+
+    <Note>
+      If the Sync Log shows no entry at all after a push, the GitHub App webhook is likely not reaching DSS Stringers. Check for firewall or GitHub App permission issues first.
+    </Note>
+  </Accordion>
+
+  <Accordion title='"Invalid API key" error'>
+    An `Invalid API key` error means the DSS Stringers backend could not authenticate the request. This is almost always a configuration issue, not an expired key.
+
+    - **Keys are project-scoped.** Each project has its own API key. If you copied a key from Project A into Project B's secrets, authentication will fail. Generate a fresh key in **Project Settings > API Keys** for the correct project.
+    - **Keys do not expire automatically**, but they can be rotated. If a key was recently rotated, any workflow or integration that still holds the old key will start failing. Update the secret in every location where the old key was used.
+    - **Strip whitespace before saving.** When you paste a key into a secret field or environment variable, check for a trailing newline or leading space — these are invisible but will break authentication.
+
+    <Tip>
+      After updating a secret in GitHub, re-run the most recent failed workflow run manually using **Re-run jobs** to confirm the fix without waiting for the next push.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Generated docs are incomplete or missing functions">
+    If you notice that certain functions, classes, or modules are absent from your generated documentation, one of the following is likely the cause.
+
+    - **Check your glob patterns.** Open `.dssstringers.json` and inspect the `include` and `exclude` arrays. A pattern that is too broad in `exclude` (for example, `src/utils/**`) can silently suppress entire directories.
+    - **Look for skip annotations.** Functions decorated with `@nodoc` or `@internal` in their JSDoc comment block are intentionally excluded from generation. Rename or remove the annotation if you want those functions documented.
+    - **Large files are chunked.** Files exceeding 500 KB are split into chunks before being sent to the AI provider. If a function has complex interdependencies that span chunks, its generated documentation may be incomplete. Consider breaking very large files into smaller modules.
+
+    <Warning>
+      Do not raise the chunk size threshold as a workaround — oversized prompts increase latency significantly and may exceed your AI provider's context window, causing generation to fail entirely.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Vercel hook not triggering doc generation">
+    DSS Stringers listens for a Vercel Deploy Hook to kick off doc generation after a successful deployment. If that hook is silent, check these three things.
+
+    1. **Confirm the hook URL is saved in Vercel.** In your Vercel project, go to **Settings > Git > Deploy Hooks**. The DSS Stringers hook URL (visible in **Integrations > Vercel** in your DSS dashboard) must appear in this list. If it is missing, paste it in and save.
+    2. **The hook only fires on successful deployments.** If the Vercel build itself fails, the hook is never called and DSS Stringers never receives a trigger. Fix any Vercel build errors first, then redeploy.
+    3. **Check the integration log.** In your DSS Stringers dashboard, open **Integrations > Vercel** and expand the log panel. Delivery attempts and any HTTP error responses from the hook endpoint are recorded there.
+
+    <Note>
+      Preview deployments do not trigger the hook by default. Only production deployments (targeting your production branch) fire the hook unless you explicitly configured otherwise in Vercel.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Supabase schema not appearing">
+    When your Supabase tables, views, or RPC functions are missing from the generated docs, run through the following checks.
+
+    - **Use the service role key, not the anon key.** Schema introspection requires elevated database access. The anon key does not have permission to query `information_schema`. Copy your **service role key** from the Supabase dashboard under **Project Settings > API**.
+    - **Verify which schemas are selected.** Only schemas explicitly listed in **Integrations > Supabase > Documented Schemas** are introspected. If you recently added a new schema to your database, open the integration settings and add it to the list.
+    - **Trigger a fresh introspection.** Schema introspection runs once per sync cycle. If you added a table or RPC after the last sync, push a commit to your target branch or use the **Sync Now** button in the dashboard to force a new run.
+
+    <Tip>
+      If you rotated your Supabase service role key for security reasons, remember to update it in **Integrations > Supabase > Connection Settings** inside the DSS Stringers dashboard.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="AI generation errors (quota / rate limit)">
+    If the Sync Log reports a quota or rate limit error, the issue originates from your Anthropic or OpenAI account — not from DSS Stringers itself.
+
+    - **Check your billing status.** Log in to the [Anthropic console](https://console.anthropic.com) or [OpenAI platform](https://platform.openai.com) (whichever provider you have configured) and confirm your account is in good standing, your usage tier allows the request volume, and no spending limits have been breached.
+    - **Understand DSS Stringers' retry behaviour.** On receiving a rate limit response, DSS Stringers automatically retries the failed generation request once after a 60-second delay. If the retry also fails, the sync is marked as errored and the details appear in the Sync Log.
+    - **Upgrade your API tier if needed.** New API accounts on both Anthropic and OpenAI start with conservative rate limits that can be too low for large projects. Request a tier increase directly with the provider.
+
+    <Warning>
+      DSS Stringers does not store, proxy, or cache AI responses. All token consumption is billed directly against your own API key. Unexpectedly high bills from your AI provider indicate a large project, high sync frequency, or an unintended loop in your pipeline.
+    </Warning>
+  </Accordion>
+</AccordionGroup>

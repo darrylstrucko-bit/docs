@@ -1,0 +1,282 @@
+---
+title: "Projects API — DSS Stringers Endpoints"
+sidebarTitle: "Projects"
+description: "Create, list, update, and delete DSS Stringers projects, and trigger manual documentation syncs via the Projects REST API."
+---
+
+Projects are the top-level resource in DSS Stringers. Each project maps to a single Git repository and controls which AI model generates your docs, which files are included or excluded, and which branch is tracked. The endpoints below let you manage the full project lifecycle and kick off on-demand sync jobs without visiting the Dashboard.
+
+---
+
+## POST /projects
+
+Register a new project under your account.
+
+### Request Body
+
+<ParamField body="name" type="string" required>
+  A human-readable display name for the project (e.g. `"My API Docs"`).
+</ParamField>
+
+<ParamField body="slug" type="string" required>
+  A URL-safe identifier for the project. Must be unique within your account (e.g. `"my-api-docs"`).
+</ParamField>
+
+<ParamField body="repo_url" type="string" required>
+  The HTTPS URL of the Git repository DSS Stringers should watch (e.g. `"https://github.com/acme/api"`).
+</ParamField>
+
+<ParamField body="ai" type='"claude" | "openai"' default='"claude"'>
+  The AI model used to generate documentation. Defaults to `"claude"` if omitted.
+</ParamField>
+
+### Response — 201 Created
+
+<ResponseField name="id" type="string">
+  Unique identifier for the project (e.g. `"proj_abc123"`).
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The display name you provided.
+</ResponseField>
+
+<ResponseField name="slug" type="string">
+  The URL-safe identifier you provided.
+</ResponseField>
+
+<ResponseField name="api_key" type="string">
+  The project-scoped API key. **Store this immediately** — it is only returned in full on creation.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 UTC timestamp of when the project was created.
+</ResponseField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.dssstringers.com/v1/projects \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My API Docs",
+    "slug": "my-api-docs",
+    "repo_url": "https://github.com/acme/api",
+    "ai": "claude"
+  }'
+```
+
+```json Response
+{
+  "id": "proj_abc123",
+  "name": "My API Docs",
+  "slug": "my-api-docs",
+  "api_key": "dsss_live_xxxxxxxxxxxxxxxxxxxx",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+</CodeGroup>
+
+---
+
+## GET /projects
+
+List all projects associated with the authenticated account. Supports [pagination](/api-reference/overview#pagination).
+
+### Query Parameters
+
+<ParamField query="page" type="integer" default="1">
+  Page number to retrieve.
+</ParamField>
+
+<ParamField query="limit" type="integer" default="20">
+  Number of projects per page. Maximum `100`.
+</ParamField>
+
+### Response — 200 OK
+
+Returns an array of project objects under a `data` key, plus a `meta` pagination object.
+
+<ResponseField name="data" type="array">
+  Array of project objects. Each object contains `id`, `name`, `slug`, and `created_at`.
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  <Expandable title="meta fields">
+    <ResponseField name="meta.total" type="integer">
+      Total number of projects across all pages.
+    </ResponseField>
+    <ResponseField name="meta.page" type="integer">
+      Current page number.
+    </ResponseField>
+    <ResponseField name="meta.limit" type="integer">
+      Items per page.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## GET /projects/:id
+
+Fetch a single project by its `id` or `slug`.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  The project's unique `id` (e.g. `proj_abc123`) or its `slug` (e.g. `my-api-docs`).
+</ParamField>
+
+### Response — 200 OK
+
+Returns the full project object.
+
+<ResponseField name="id" type="string">Unique project identifier.</ResponseField>
+<ResponseField name="name" type="string">Project display name.</ResponseField>
+<ResponseField name="slug" type="string">URL-safe project identifier.</ResponseField>
+<ResponseField name="repo_url" type="string">The tracked Git repository URL.</ResponseField>
+<ResponseField name="ai" type="string">AI model in use (`"claude"` or `"openai"`).</ResponseField>
+<ResponseField name="branch" type="string">The Git branch being tracked.</ResponseField>
+<ResponseField name="include" type="array">List of glob patterns for files to include.</ResponseField>
+<ResponseField name="exclude" type="array">List of glob patterns for files to exclude.</ResponseField>
+<ResponseField name="created_at" type="string">ISO 8601 UTC creation timestamp.</ResponseField>
+
+---
+
+## PATCH /projects/:id
+
+Update settings for an existing project. Send only the fields you want to change.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  The project `id` or `slug` to update.
+</ParamField>
+
+### Request Body
+
+<ParamField body="name" type="string">
+  New display name for the project.
+</ParamField>
+
+<ParamField body="ai" type='"claude" | "openai"'>
+  Switch the AI model used for documentation generation.
+</ParamField>
+
+<ParamField body="branch" type="string">
+  The Git branch to track (e.g. `"main"` or `"docs"`).
+</ParamField>
+
+<ParamField body="include" type="string[]">
+  Array of glob patterns specifying which files to include in documentation generation (e.g. `["src/**/*.ts"]`).
+</ParamField>
+
+<ParamField body="exclude" type="string[]">
+  Array of glob patterns specifying which files to exclude (e.g. `["**/*.test.ts", "dist/**"]`).
+</ParamField>
+
+### Response — 200 OK
+
+Returns the updated project object with the same shape as [GET /projects/:id](#get-projects-id).
+
+<CodeGroup>
+
+```bash cURL
+curl -X PATCH https://api.dssstringers.com/v1/projects/proj_abc123 \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "branch": "docs",
+    "ai": "openai",
+    "exclude": ["**/*.test.ts", "dist/**"]
+  }'
+```
+
+```json Response
+{
+  "id": "proj_abc123",
+  "name": "My API Docs",
+  "slug": "my-api-docs",
+  "repo_url": "https://github.com/acme/api",
+  "ai": "openai",
+  "branch": "docs",
+  "include": [],
+  "exclude": ["**/*.test.ts", "dist/**"],
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+</CodeGroup>
+
+---
+
+## DELETE /projects/:id
+
+Permanently delete a project and **all** of its generated documentation. This action cannot be undone.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  The project `id` or `slug` to delete.
+</ParamField>
+
+### Response — 204 No Content
+
+An empty body is returned on success.
+
+```bash cURL
+curl -X DELETE https://api.dssstringers.com/v1/projects/proj_abc123 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+---
+
+## POST /projects/:id/sync
+
+Trigger a manual documentation sync for the project without waiting for a Git push or Vercel deploy event.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  The project `id` or `slug` to sync.
+</ParamField>
+
+### Request Body
+
+<ParamField body="force" type="boolean" default="false">
+  Set to `true` to regenerate all documentation pages even if no file changes are detected since the last sync.
+</ParamField>
+
+### Response — 202 Accepted
+
+<ResponseField name="id" type="string">
+  Unique identifier for the sync job (e.g. `"sync_xyz789"`).
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Initial status of the sync job. Always `"queued"` immediately after creation.
+</ResponseField>
+
+<ResponseField name="started_at" type="string">
+  ISO 8601 UTC timestamp of when the sync job was queued.
+</ResponseField>
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.dssstringers.com/v1/projects/proj_abc123/sync \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "force": true }'
+```
+
+```json Response
+{
+  "id": "sync_xyz789",
+  "status": "queued",
+  "started_at": "2024-01-15T10:30:00Z"
+}
+```
+
+</CodeGroup>

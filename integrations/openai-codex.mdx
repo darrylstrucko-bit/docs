@@ -1,0 +1,88 @@
+---
+title: "Use OpenAI as the AI Backend for Doc Generation"
+sidebarTitle: "OpenAI"
+description: "Configure OpenAI GPT-4o or Codex as your DSS Stringers AI backend to generate precise API reference documentation from your source code."
+---
+
+DSS Stringers integrates with OpenAI's GPT and Codex family of models, giving you a powerful alternative AI backend for documentation generation. OpenAI's Codex-lineage models are especially strong at parsing source code structure and producing accurate, well-formatted API reference pages — making them a great fit for projects where precision matters more than long-form narrative prose.
+
+<Note>
+  Your OpenAI API key is stored encrypted at rest and is **never logged** or included in any telemetry. DSS Stringers only uses the key to make generation requests on your behalf.
+</Note>
+
+## Set OpenAI as your AI backend
+
+<Steps>
+  <Step title="Open AI backend settings">
+    In the DSS Stringers dashboard, select your project and navigate to **Project Settings → AI Backend → OpenAI**.
+  </Step>
+  <Step title="Enter your OpenAI API key">
+    Paste your OpenAI API key into the **API Key** field. You can create or manage API keys at [platform.openai.com](https://platform.openai.com).
+  </Step>
+  <Step title="Save the configuration">
+    Click **Save**. DSS Stringers validates the key immediately. A green checkmark confirms the key is accepted by the OpenAI API.
+  </Step>
+</Steps>
+
+## Configure via `.dssstringers.json`
+
+Declare the OpenAI backend in your repository's `.dssstringers.json` file to keep your AI configuration in version control alongside the rest of your project settings.
+
+```json .dssstringers.json
+{
+  "ai": "openai",
+  "model": "gpt-4o"
+}
+```
+
+DSS Stringers defaults to `gpt-4o` when OpenAI is selected. You can override this to any supported model depending on your speed, cost, or quality requirements.
+
+## Supported models
+
+<Tabs>
+  <Tab title="gpt-4o">
+    The default and recommended model. Offers the best balance of code comprehension, documentation quality, and generation speed. Ideal for most Node.js and TypeScript projects.
+
+    ```json
+    { "ai": "openai", "model": "gpt-4o" }
+    ```
+  </Tab>
+  <Tab title="gpt-4-turbo">
+    A strong alternative when you need longer context windows or are working with unusually large source files. Slightly slower than `gpt-4o` but handles bigger payloads reliably.
+
+    ```json
+    { "ai": "openai", "model": "gpt-4-turbo" }
+    ```
+  </Tab>
+  <Tab title="gpt-3.5-turbo">
+    The fastest and most cost-effective option. Well-suited to high-volume projects or simpler codebases where generation speed and cost are the primary concern.
+
+    ```json
+    { "ai": "openai", "model": "gpt-3.5-turbo" }
+    ```
+  </Tab>
+</Tabs>
+
+## Switch AI backends without losing docs
+
+You can change from OpenAI to Claude (or any other supported backend) at any time from **Project Settings → AI Backend**. Switching backends does not delete or invalidate any previously generated documentation pages. The next generation run simply uses the new backend going forward.
+
+<Tip>
+  If you are evaluating which backend produces better output for your specific codebase, use the **Manual Sync** button on a single representative file after each switch rather than regenerating your entire project every time.
+</Tip>
+
+## Customise the prompt template
+
+Like all DSS Stringers AI backends, the OpenAI integration supports custom prompt templates.
+
+<Steps>
+  <Step title="Open Doc Rules">
+    In the dashboard, navigate to **Configuration → Doc Rules**.
+  </Step>
+  <Step title="Edit the OpenAI prompt template">
+    Adjust the template to enforce your documentation style — preferred terminology, required sections, tone guidelines, or anything else that matters for your team.
+  </Step>
+  <Step title="Save and preview">
+    Click **Save**, then trigger a manual sync on one file to review the output before applying the new template to your full project.
+  </Step>
+</Steps>

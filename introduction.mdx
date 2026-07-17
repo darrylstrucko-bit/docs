@@ -1,0 +1,45 @@
+---
+title: "DSS Stringers: Automated Docs for Node.js Projects"
+sidebarTitle: "Introduction"
+description: "DSS Stringers connects to your GitHub repos and generates living documentation on every deploy — no manual updates needed."
+---
+
+DSS Stringers is an automated documentation platform built for Node.js teams. Connect your GitHub repository once, and DSS Stringers takes care of the rest — analysing your code on every push, generating accurate and up-to-date documentation with AI, and publishing it to your Mintlify site without any manual intervention. Whether you deploy through Vercel or push directly to GitHub, your docs stay in sync with your code.
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Connect your first Node.js project and publish your first auto-generated docs in under five minutes.
+  </Card>
+  <Card title="How It Works" icon="gears" href="/how-it-works">
+    Understand the end-to-end pipeline — from a code push to a live documentation update.
+  </Card>
+  <Card title="Integrations" icon="plug" href="/integrations/github">
+    Explore every integration: GitHub, Vercel, Supabase, Claude Code, and OpenAI Codex.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/overview">
+    Browse the full REST API to manage projects, triggers, and generated docs programmatically.
+  </Card>
+</CardGroup>
+
+## Get up and running
+
+Follow these four steps to go from zero to living documentation for your project.
+
+<Steps>
+  <Step title="Create your DSS Stringers account">
+    Sign up at [app.dssstringers.com](https://app.dssstringers.com) and create your first project. You will receive an API key that identifies your project in the pipeline.
+  </Step>
+  <Step title="Connect your GitHub repository">
+    Install the DSS Stringers GitHub App on the repo you want to document. This grants DSS Stringers the read access it needs to analyse your code on every push.
+  </Step>
+  <Step title="Configure and push">
+    Add your API key as a repository secret, drop an optional `.dssstringers.json` config file into your project root, and push a commit to trigger your first doc generation run.
+  </Step>
+  <Step title="View your published docs">
+    Open your Mintlify site — your documentation is live and will update automatically on every subsequent deploy. No manual editing required.
+  </Step>
+</Steps>
+
+<Tip>
+  If you are already using Vercel for deployments, DSS Stringers can hook directly into your Vercel pipeline so doc generation fires on every successful production deploy — no extra CI configuration needed. See the [How It Works](/how-it-works) page for details.
+</Tip>
